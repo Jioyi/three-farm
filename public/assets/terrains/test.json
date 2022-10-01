@@ -1,0 +1,79 @@
+[
+    {
+        "name": "windmill",
+        "label": "Windmill",
+        "width": 1,
+        "height": 1,
+        "altitude": 0.8,
+        "object_id": 3,
+        "rotation": false,
+        "position": { "x": 3, "y": 13 },
+        "castShadow": true
+    },
+    {
+        "name": "windmill",
+        "label": "Windmill",
+        "width": 1,
+        "height": 1,
+        "altitude": 0.8,
+        "object_id": 3,
+        "rotation": false,
+        "position": { "x": 3, "y": 15 },
+        "castShadow": true
+    },
+    {
+        "name": "windmill",
+        "label": "Windmill",
+        "width": 1,
+        "height": 1,
+        "altitude": 0.8,
+        "object_id": 3,
+        "rotation": false,
+        "position": { "x": 3, "y": 17 },
+        "castShadow": true
+    },
+    {
+        "name": "pumpkin",
+        "label": "Pumpkin",
+        "width": 2,
+        "height": 2,
+        "altitude": 0.8,
+        "object_id": 4,
+        "rotation": false,
+        "position": { "x": 5, "y": 15 },
+        "castShadow": false
+    },
+    {
+        "name": "pumpkin",
+        "label": "Pumpkin",
+        "width": 2,
+        "height": 2,
+        "altitude": 0.8,
+        "object_id": 4,
+        "rotation": false,
+        "position": { "x": 7, "y": 15 },
+        "castShadow": false
+    },
+    {
+        "name": "corn",
+        "label": "Corn",
+        "width": 2,
+        "height": 2,
+        "altitude": 0.8,
+        "object_id": 3,
+        "rotation": false,
+        "position": { "x": 5, "y": 13 },
+        "castShadow": false
+    },
+    {
+        "name": "corn",
+        "label": "Corn",
+        "width": 2,
+        "height": 2,
+        "altitude": 0.8,
+        "object_id": 3,
+        "rotation": false,
+        "position": { "x": 7, "y": 13 },
+        "castShadow": false
+    }
+]
