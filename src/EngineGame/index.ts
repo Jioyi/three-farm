@@ -3,9 +3,9 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
-import { GameObjectData, TerrainData } from './types';
+import { GameObjectData, IGameObject, TerrainData } from './interfaces';
 import { Terrain } from './core/Terrain';
-import { GameObject, IGameObject } from './core/GameObject';
+import { GameObject } from './core/GameObject';
 import RayMouse from './core/RayMouse';
 import './style/base.css';
 
@@ -33,6 +33,8 @@ export default class EngineGame {
         this._canvas = _canvas;
         this._eventGameHandler = _eventGameHandler;
         this._scene = new THREE.Scene();
+
+        // this._createMapJson();
         // Build Render
         this._renderer = new THREE.WebGLRenderer({
             canvas: this._canvas,
@@ -146,7 +148,12 @@ export default class EngineGame {
 
         for (let y = 0; y < this._mapSize; y++) {
             for (let x = 0; x < this._mapSize; x++) {
-                generateMap.tiles.push({ elevation: 0, position: { x: x, y: y } });
+                generateMap.tiles.push({
+                    empty: true,
+                    sold: false,
+                    elevation: 0,
+                    position: { x: x, y: y }
+                });
             }
         }
 
@@ -225,6 +232,11 @@ export default class EngineGame {
         terrainData.objects?.forEach(async (_object: GameObjectData) => {
             let i = this._uniqueModels.findIndex((x: any) => x.name === _object.name);
             if (i <= -1) return;
+
+            let tile = (this._scene.getObjectByName('Terrain')! as Terrain).tiles[_object.position.x][_object.position.y];
+            if (!tile.empty) return;
+            tile.empty = false;
+
             const gameObject = new GameObject(this._scene, _object, this._uniqueModels[i]);
             this._gameObjects[gameObject.uuid] = gameObject;
         });

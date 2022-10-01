@@ -3,12 +3,8 @@ import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
-import { GameObjectData } from '../types';
+import { GameObjectData } from '../interfaces';
 import { Terrain } from './Terrain';
-
-export interface IGameObject {
-    [key: string]: GameObject;
-}
 
 export class GameObject {
     private _elevationScale: number = 0.3;

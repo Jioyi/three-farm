@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { BasicControllerInput } from './BasicControllerInput';
-import { IGameObject } from './GameObject';
+import { BasicControllerInput } from './BasicControllerInput'; 
+import { IGameObject } from '../interfaces';
 
 export default class RayMouse {
     public _rawCoords: THREE.Vector2;

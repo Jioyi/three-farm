@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { TileData } from '../types';
+import { TileData } from '../interfaces';
 
 export class Terrain extends THREE.Mesh {
     public tiles: TileData[][] = [];
@@ -186,7 +186,7 @@ export class Terrain extends THREE.Mesh {
         this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this._mapVertices), 3));
         this.geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(this._mapUVs), 2));
         this.geometry.computeVertexNormals();
-        this.geometry.attributes.position.needsUpdate = true; 
+        this.geometry.attributes.position.needsUpdate = true;
     }
 }
 
