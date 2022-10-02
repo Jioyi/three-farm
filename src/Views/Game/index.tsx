@@ -5,8 +5,13 @@ import Styles from './Game.module.css';
 import EngineGame from '../../EngineGame';
 // Components
 import Loading from '../../Components/Loading';
+import GameNavbar from '../../Components/GameNavbar';
+// Contexts
+import { useUserContext } from '../../Contexts';
+import ResourcesBar from '../../Components/ResourcesBar';
 
 const Game = () => {
+    const { setEngine } = useUserContext();
     const sceneCanvasRef = React.useRef<HTMLCanvasElement>(null);
     const started = React.useRef(false);
     const [loading, setLoading] = React.useState(true);
@@ -26,14 +31,18 @@ const Game = () => {
     React.useLayoutEffect(() => {
         if (sceneCanvasRef.current && !started.current) {
             started.current = true;
-            new EngineGame(sceneCanvasRef.current, eventGameHandler);
+            const engine = new EngineGame(sceneCanvasRef.current, eventGameHandler);
+            setEngine(engine);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
         <div className={Styles['container']}>
             <canvas ref={sceneCanvasRef} className={Styles['game-canvas']} />
             <Loading loading={loading} progress={progress} />
+            <ResourcesBar />
+            <GameNavbar />
         </div>
     );
 };
