@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { BasicControllerInput } from './BasicControllerInput';
-import { IGameObject } from './GameObject';
+import { IGameObject } from '../interfaces';
 
 export default class RayMouse {
     public _rawCoords: THREE.Vector2;
@@ -12,7 +12,7 @@ export default class RayMouse {
     private _scene: THREE.Scene;
     private _camera: THREE.PerspectiveCamera;
     private _controls: OrbitControls;
-    private _mouse: THREE.Vector2;
+    private _pointer: THREE.Vector2;
 
     private _gameObjects: IGameObject;
     private _frustum!: THREE.Frustum;
@@ -41,7 +41,7 @@ export default class RayMouse {
         this._eventGameHandler = eventGameHandler;
 
         this._input = new BasicControllerInput();
-        this._mouse = new THREE.Vector2();
+        this._pointer = new THREE.Vector2();
         this._rawCoords = new THREE.Vector2();
 
         this._renderer.domElement.addEventListener('mousemove', this._onMouseMove.bind(this), false);
@@ -68,9 +68,9 @@ export default class RayMouse {
     }
 
     private _onMouseMove = (_event: any) => {
-        this._prevMouse = this._mouse.clone();
+        this._prevMouse = this._pointer.clone();
         this._updateMouseCoords(_event);
-        if (!this._prevMouse.equals(this._mouse)) {
+        if (!this._prevMouse.equals(this._pointer)) {
             if (this._mouseDown) {
                 const positions = (this._line.geometry as THREE.BufferGeometry).attributes.position.array as Array<number>;
 
@@ -81,9 +81,8 @@ export default class RayMouse {
 
                 (this._line.geometry as THREE.BufferGeometry).attributes.position.needsUpdate = true;
 
-                this._position1 = this._mouse.clone();
+                this._position1 = this._pointer.clone();
                 this._updateFrustrum();
-                //this._selectObjects();
             }
         }
     };
@@ -94,9 +93,9 @@ export default class RayMouse {
             return;
         }
         this._controls.enablePan = false;
-        this._prevMouse = this._mouse.clone();
+        this._prevMouse = this._pointer.clone();
         this._updateMouseCoords(_event);
-        this._mouseDown = this._mouse.clone();
+        this._mouseDown = this._pointer.clone();
         this._rawMouseDown = this._rawCoords.clone();
 
         this._line.visible = true;
@@ -106,8 +105,8 @@ export default class RayMouse {
             positions[i + 1] = this._rawCoords.y;
         }
         (this._line.geometry as THREE.BufferGeometry).attributes.position.needsUpdate = true;
-        this._position0 = this._mouse.clone();
-        this._position1 = this._mouse.clone();
+        this._position0 = this._pointer.clone();
+        this._position1 = this._pointer.clone();
         this._updateFrustrum();
     };
 
@@ -117,7 +116,7 @@ export default class RayMouse {
             return;
         }
         this._controls.enablePan = false;
-        this._prevMouse = this._mouse.clone();
+        this._prevMouse = this._pointer.clone();
         this._updateMouseCoords(_event);
         this._mouseDown = undefined;
         this._rawMouseDown = undefined;
@@ -129,8 +128,8 @@ export default class RayMouse {
     private _updateMouseCoords = (_event: any) => {
         this._rawCoords.x = _event.clientX - this._renderer.domElement.offsetLeft - this._renderer.domElement.offsetWidth / 2;
         this._rawCoords.y = -(_event.clientY - this._renderer.domElement.offsetTop + 0.5) + this._renderer.domElement.offsetHeight / 2;
-        this._mouse.x = ((_event.clientX - this._renderer.domElement.offsetLeft + 0.5) / this._renderer.domElement.offsetWidth) * 2 - 1;
-        this._mouse.y = -((_event.clientY - this._renderer.domElement.offsetTop + 0.5) / this._renderer.domElement.offsetHeight) * 2 + 1;
+        this._pointer.x = ((_event.clientX - this._renderer.domElement.offsetLeft + 0.5) / this._renderer.domElement.offsetWidth) * 2 - 1;
+        this._pointer.y = -((_event.clientY - this._renderer.domElement.offsetTop + 0.5) / this._renderer.domElement.offsetHeight) * 2 + 1;
     };
 
     private _updateFrustrum = () => {
@@ -228,6 +227,7 @@ export default class RayMouse {
         const list: any[] = [];
 
         for (let key of Object.keys(this._gameObjects)) {
+            if (!this._gameObjects[key].targetable) continue;
             if (this._frustum.intersectsBox(this._gameObjects[key].area)) {
                 this._gameObjects[key].selected = true;
                 list.push(this._gameObjects[key].data);

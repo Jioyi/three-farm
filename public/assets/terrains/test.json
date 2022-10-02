@@ -1,5 +1,16 @@
 [
     {
+        "name": "fence1",
+        "label": "Fence",
+        "width": 1,
+        "height": 1,
+        "altitude": 0.8,
+        "object_id": 3,
+        "rotation": false,
+        "position": { "x": 0, "y": 0 },
+        "castShadow": true
+    },
+    {
         "name": "windmill",
         "label": "Windmill",
         "width": 1,

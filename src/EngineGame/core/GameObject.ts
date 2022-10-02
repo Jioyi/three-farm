@@ -3,19 +3,16 @@ import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
-import { GameObjectData } from '../types';
-import { Terrain } from './Terrain';
-
-export interface IGameObject {
-    [key: string]: GameObject;
-}
+import { GameObjectData, IGameObject } from '../interfaces';
 
 export class GameObject {
-    private _elevationScale: number = 0.3;
     private _scene: THREE.Scene;
     private _selected: boolean = false;
+    private _targetable: boolean = false;
     private _label: CSS2DObject;
     private _circle: Line2;
+    private _models: any;
+    private _gameObjects: any;
 
     public data: GameObjectData;
     public model: any;
@@ -29,23 +26,48 @@ export class GameObject {
     private _bar: HTMLDivElement;
     private _hit: HTMLDivElement;
 
-    constructor(_scene: THREE.Scene, _gameObjectData: GameObjectData, _model: any) {
-        this._scene = _scene;
+    private _dummy = new THREE.Object3D();
 
+    constructor(
+        _scene: THREE.Scene,
+        _gameObjectData: GameObjectData,
+        _model: any,
+        _models: any,
+        _mixers: THREE.AnimationMixer[],
+        _animations: any,
+        _gameObjects: IGameObject
+    ) {
+        this._scene = _scene;
+        this._targetable = _gameObjectData.targetable;
+        this._models = _models;
+        this._gameObjects = _gameObjects;
         this.data = _gameObjectData;
         this.model = _model;
 
-        let dummy = new THREE.Object3D();
-
-        let elevation = (this._scene.getObjectByName('Terrain')! as Terrain).tiles[this.data.position!.x][this.data.position!.y].actualElevation;
         let instancedMesh = new THREE.InstancedMesh(this.model.geometry, this.model.material, 1);
         instancedMesh.rotation.set(0, this.data.rotation, 0);
-        instancedMesh.position.set(this.data.position!.y, elevation * this.elevationScale, this.data.position!.x);
-        instancedMesh.setMatrixAt(0, dummy.matrix);
+        instancedMesh.position.set(this.data.position.y, 0, this.data.position.x);
+        instancedMesh.setMatrixAt(0, this._dummy.matrix);
         instancedMesh.name = this.data.name;
         instancedMesh.castShadow = this.data.castShadow;
         this.obj = instancedMesh;
         this.uuid = instancedMesh.uuid;
+
+        if (this.data.name === 'windmill') {
+            let i = _models.findIndex((x: any) => x.name === 'windmill2');
+            if (i >= 0) {
+                const model = _models[i].clone();
+                const mixer = new THREE.AnimationMixer(model);
+                _mixers.push(mixer);
+                this.obj.add(model);
+
+                let a = _animations.findIndex((x: any) => x.name === 'windmillAction');
+                if (a >= 0) {
+                    const action = mixer.clipAction(_animations[a]);
+                    action.play();
+                }
+            }
+        }
 
         //Create circle area
         const points = [];
@@ -118,12 +140,12 @@ export class GameObject {
         this._scene.add(instancedMesh);
     }
 
-    get elevationScale(): number {
-        return this._elevationScale;
+    get targetable(): boolean {
+        return this._targetable;
     }
 
-    set elevationScale(_number: number) {
-        this._elevationScale = _number;
+    set targetable(_bool: boolean) {
+        this._targetable = _bool;
     }
 
     get selected(): boolean {
@@ -163,4 +185,75 @@ export class GameObject {
             this._bar.style.width = barWidth + '%';
         }, 500);
     }
+
+    public updateFence = () => {
+        let forward = Object.keys(this._gameObjects).find(
+            (key: string) =>
+                this._gameObjects[key].data.name.includes('fence') &&
+                this._gameObjects[key].data.position.y === this.data.position.y &&
+                this._gameObjects[key].data.position.x === this.data.position.x - 1
+        );
+        let backward = Object.keys(this._gameObjects).find(
+            (key: string) =>
+                this._gameObjects[key].data.name.includes('fence') &&
+                this._gameObjects[key].data.position.y === this.data.position.y &&
+                this._gameObjects[key].data.position.x === this.data.position.x + 1
+        );
+        let left = Object.keys(this._gameObjects).find(
+            (key: string) =>
+                this._gameObjects[key].data.name.includes('fence') &&
+                this._gameObjects[key].data.position.y === this.data.position.y - 1 &&
+                this._gameObjects[key].data.position.x === this.data.position.x
+        );
+        let right = Object.keys(this._gameObjects).find(
+            (key: string) =>
+                this._gameObjects[key].data.name.includes('fence') &&
+                this._gameObjects[key].data.position.y === this.data.position.y + 1 &&
+                this._gameObjects[key].data.position.x === this.data.position.x
+        );
+
+        if (forward && left && backward && right) {
+            this._updateFenceModel('fence2', 0);
+        } else if ((forward && left && backward) || (left && backward && right) || (backward && right && forward) || (right && forward && left)) {
+            if (forward && left && backward) {
+                this._updateFenceModel('fence3', -Math.PI / 2);
+            } else if (left && backward && right) {
+                this._updateFenceModel('fence3', 0);
+            } else if (backward && right && forward) {
+                this._updateFenceModel('fence3', Math.PI / 2);
+            } else {
+                this._updateFenceModel('fence3', -Math.PI);
+            }
+        } else if ((forward && left) || (left && backward) || (backward && right) || (right && forward)) {
+            if (forward && left) {
+                this._updateFenceModel('fence4', -Math.PI);
+            } else if (left && backward) {
+                this._updateFenceModel('fence4', -Math.PI / 2);
+            } else if (backward && right) {
+                this._updateFenceModel('fence4', 0);
+            } else {
+                this._updateFenceModel('fence4', Math.PI / 2);
+            }
+        } else if (forward || backward) {
+            this._updateFenceModel('fence1', Math.PI / 2);
+        } else {
+            this._updateFenceModel('fence1', 0);
+        }
+    };
+
+    private _updateFenceModel = (_name: string, _rotation: number) => {
+        let i = this._models.findIndex((x: any) => x.name === _name);
+        if (i <= -1) return;
+
+        let instancedMesh = new THREE.InstancedMesh(this._models[i].geometry, this._models[i].material, 1);
+        instancedMesh.rotation.set(0, _rotation, 0);
+        instancedMesh.position.set(this.data.position.y, 0, this.data.position.x);
+        instancedMesh.setMatrixAt(0, this._dummy.matrix);
+        instancedMesh.name = this.data.name;
+        instancedMesh.castShadow = this.data.castShadow;
+        this._scene.remove(this.obj);
+        this.obj = instancedMesh;
+        this.uuid = instancedMesh.uuid;
+        this._scene.add(this.obj);
+    };
 }
