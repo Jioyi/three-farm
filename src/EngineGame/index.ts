@@ -3,7 +3,7 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
-import { GameObjectData, IGameObject, TerrainData } from './interfaces';
+import { GamePosition, IGameObject, TerrainData } from './interfaces';
 import { Terrain } from './core/Terrain';
 import { GameObject } from './core/GameObject';
 import RayMouse from './core/RayMouse';
@@ -11,6 +11,7 @@ import './style/base.css';
 
 export default class EngineGame {
     protected _mapSize = 96;
+    protected _cameraStarted: GamePosition = { x: 12, y: 12 };
 
     public _canvas: HTMLCanvasElement;
     public _scene: THREE.Scene;
@@ -28,13 +29,15 @@ export default class EngineGame {
 
     private _gameObjects: IGameObject = {} as IGameObject;
     private _rayMouse!: RayMouse;
+    private _mixers: THREE.AnimationMixer[] = [];
+    private _animations!: THREE.AnimationClip[];
 
     constructor(_canvas: HTMLCanvasElement, _eventGameHandler: (...args: any[]) => any) {
         this._canvas = _canvas;
         this._eventGameHandler = _eventGameHandler;
         this._scene = new THREE.Scene();
 
-        // this._createMapJson();
+        //this._createMapJson();
         // Build Render
         this._renderer = new THREE.WebGLRenderer({
             canvas: this._canvas,
@@ -66,7 +69,7 @@ export default class EngineGame {
         this._camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
         this._camera.layers.enableAll();
         this._camera.layers.toggle(1);
-        this._camera.position.set(this._mapSize / 2 - 15, 25, this._mapSize / 2 + 15);
+        this._camera.position.set(this._cameraStarted.x - 15, 25, this._cameraStarted.y + 15);
 
         // Build OCamera: is used to render selection ribbon
         this._ocamera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 0.1, 1000);
@@ -84,7 +87,7 @@ export default class EngineGame {
         this._orbitControls.maxDistance = 45;
         this._orbitControls.minDistance = 3;
         this._orbitControls.screenSpacePanning = false;
-        this._orbitControls.target.set(this._mapSize / 2, 0, this._mapSize / 2);
+        this._orbitControls.target.set(this._cameraStarted.x, 0, this._cameraStarted.y);
         this._orbitControls.update();
 
         this._buildLights();
@@ -126,6 +129,11 @@ export default class EngineGame {
     private _update = (_deltaTime: number) => {
         this._stats.update();
         this._orbitControls.update();
+        if (this._mixers.length !== 0) {
+            for (let i = 0, l = this._mixers.length; i < l; i++) {
+                this._mixers[i].update(_deltaTime);
+            }
+        }
     };
 
     private _buildLights = () => {
@@ -151,7 +159,6 @@ export default class EngineGame {
                 generateMap.tiles.push({
                     empty: true,
                     sold: false,
-                    elevation: 0,
                     position: { x: x, y: y }
                 });
             }
@@ -166,6 +173,7 @@ export default class EngineGame {
                         generateMap.objects.push({
                             name: 'tree1',
                             label: 'Tree',
+                            targetable: true,
                             width_size: 1,
                             length_size: 1,
                             label_altitude: 1.3,
@@ -178,16 +186,44 @@ export default class EngineGame {
                         generateMap.objects.push({
                             name: 'stone1',
                             label: 'Stone',
+                            targetable: true,
                             width_size: 1,
                             length_size: 1,
                             label_altitude: 1.1,
-                            object_id: 2,
+                            object_id: 1,
                             rotation: Math.random() * Math.PI,
                             position: { x: x, y: y },
                             castShadow: true
                         });
                     }
                 }
+            }
+        }
+
+        const farmSize = 24;
+        for (let y = 0; y < farmSize; y++) {
+            for (let x = 0; x < farmSize; x++) {
+                let e = generateMap.tiles.findIndex((tile: any) => tile.position.y === y && tile.position.x === x);
+                if (e >= 0) {
+                    generateMap.tiles[e].sold = true;
+                }
+                if (y > 0 && y < farmSize - 1 && x > 0 && x < farmSize - 1) continue;
+                let i = generateMap.objects.findIndex((obj: any) => obj.position.y === y && obj.position.x === x);
+                if (i >= 0) {
+                    generateMap.objects.splice(i, 1);
+                }
+                generateMap.objects.push({
+                    name: 'fence1',
+                    label: 'Fence',
+                    targetable: false,
+                    width_size: 1,
+                    length_size: 1,
+                    label_altitude: 0.5,
+                    object_id: 2,
+                    rotation: 0,
+                    position: { x: x, y: y },
+                    castShadow: true
+                });
             }
         }
 
@@ -205,11 +241,6 @@ export default class EngineGame {
         const terrainMesh = new Terrain(terrainData.tiles!);
         this._scene.add(terrainMesh);
 
-        const gridHelper = new THREE.GridHelper(this._mapSize, this._mapSize);
-        gridHelper.name = 'grid';
-        gridHelper.position.set(this._mapSize / 2 - 0.5, 0.01, this._mapSize / 2 - 0.5);
-        this._scene.add(gridHelper);
-
         const manager = new THREE.LoadingManager();
         manager.onLoad = () => {
             this._eventGameHandler({ type: 'progress', data: 99 });
@@ -224,22 +255,35 @@ export default class EngineGame {
         const loader = new GLTFLoader(manager);
         loader.crossOrigin = 'anonymous';
         const gltf = await loader.loadAsync(`assets/models/farm-assets.glb`);
+        this._animations = gltf.animations;
 
-        for (const object of gltf.scene.children) {
-            this._uniqueModels.push(object);
+        for (let child of gltf.scene.children) {
+            this._uniqueModels.push(child);
         }
 
-        terrainData.objects?.forEach(async (_object: GameObjectData) => {
-            let i = this._uniqueModels.findIndex((x: any) => x.name === _object.name);
-            if (i <= -1) return;
+        for (let object of terrainData.objects!) {
+            let i = this._uniqueModels.findIndex((x: any) => x.name === object.name);
+            if (i <= -1) continue;
 
-            let tile = (this._scene.getObjectByName('Terrain')! as Terrain).tiles[_object.position.x][_object.position.y];
-            if (!tile.empty) return;
+            let tile = (this._scene.getObjectByName('Terrain')! as Terrain).tiles[object.position.x][object.position.y];
+            if (!tile.empty) continue;
             tile.empty = false;
 
-            const gameObject = new GameObject(this._scene, _object, this._uniqueModels[i]);
+            const gameObject = new GameObject(
+                this._scene,
+                object,
+                this._uniqueModels[i],
+                this._uniqueModels,
+                this._mixers,
+                this._animations,
+                this._gameObjects
+            );
             this._gameObjects[gameObject.uuid] = gameObject;
-        });
+        }
+
+        for (let key of Object.keys(this._gameObjects)) {
+            if (this._gameObjects[key].data.name.includes('fence')) this._gameObjects[key].updateFence();
+        }
     }
 
     private _buildRayMouse() {
