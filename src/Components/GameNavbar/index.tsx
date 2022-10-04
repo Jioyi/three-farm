@@ -8,6 +8,7 @@ import { alpha } from '@mui/material';
 import { useUserContext } from '../../Contexts';
 import Tooltip from '../Tooltip';
 
+
 const Nav = styled(Box)(({ theme }) => ({
     display: 'flex',
     width: '100%',
@@ -37,7 +38,7 @@ const GameNavbar = () => {
         testFunct('Hello World!');
     };
 
-    return (
+    return (<>
         <Nav onClick={handleOnClick}>
             <Tooltip title="Esto es un Tooltip">
                 <CustomTypography>Test</CustomTypography>
@@ -45,6 +46,7 @@ const GameNavbar = () => {
             <Box sx={{ flexGrow: 1 }}></Box>
             <CustomTypography>Test</CustomTypography>
         </Nav>
+        </>
     );
 };
 
