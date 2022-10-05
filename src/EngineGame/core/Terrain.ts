@@ -34,12 +34,12 @@ export class Terrain extends THREE.Mesh {
         this._assignGeometry(tiles);
     }
 
-    private _assignGeometry(tiles: TileData[]) {
+    private _assignGeometry(_tilesData: TileData[]) {
         this.tiles = Array(this._mapSize)
             .fill(this._mapSize)
-            .map((entry) => Array(this._mapSize));
+            .map((_entry) => Array(this._mapSize));
 
-        tiles.forEach((tile) => (this.tiles[tile.position.x][tile.position.y] = tile));
+        _tilesData.forEach((tile) => (this.tiles[tile.position.x][tile.position.y] = tile));
 
         for (let row = 0; row < this.tiles.length; row++) {
             for (let col = 0; col < this.tiles.length; col++) {
@@ -80,6 +80,7 @@ export class Terrain extends THREE.Mesh {
         this.geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(this._mapUVs), 2));
         this.geometry.computeVertexNormals();
         this.geometry.attributes.position.needsUpdate = true;
+        this.layers.enable(2);
     }
 }
 

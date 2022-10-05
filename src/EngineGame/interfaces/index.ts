@@ -22,14 +22,8 @@ export interface TileData {
 }
 
 export interface GameObjectData {
-    castShadow: boolean;
-    name: string;
+    uuid?: string;
     object_id: number;
-    targetable: boolean;
-    label: string;
-    label_altitude: number;
-    width_size: number;
-    length_size: number;
     rotation: number;
     position: GamePosition;
 }
@@ -37,4 +31,40 @@ export interface GameObjectData {
 export interface GamePosition {
     x: number;
     y: number;
+}
+
+export interface GameData {
+    money: number;
+    categories: CategoryData[];
+    assets: AssetData[];
+}
+
+export interface CategoryData {
+    id: number;
+    name: string;
+    image: string;
+    assets: number[];
+}
+
+export interface AssetData {
+    id: number;
+    name: string;
+    targetable: boolean;
+    meshAnimation?: meshAnimation;
+    label: string;
+    labelAltitude: number;
+    labelClassName: string;
+    sizeX: number;
+    sizeY: number;
+    castShadow: boolean;
+    autoRotate: boolean;
+    image: string;
+    imageModel: string;
+    price: number;
+    description: string;
+}
+
+export interface meshAnimation {
+    modelName: string;
+    actionName: string;
 }

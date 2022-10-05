@@ -31,7 +31,7 @@ type LoadingProps = {
 
 const Loading = ({ loading, progress }: LoadingProps) => {
     return (
-        <Backdrop sx={{ flexGrow: 1, backgroundColor: '#000', color: '#fff', opacity: 1, zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loading}>
+        <Backdrop sx={{ flexGrow: 1, backgroundColor: '#000', color: '#fff', opacity: 1, zIndex: 5 }} open={loading}>
             <Box sx={{ flexGrow: 0.8 }}>
                 <Box display="flex" justifyContent="center" alignItems="center">
                     <CardMedia component="img" sx={{ width: 150, padding: 5 }} image="/logo512.png" alt="logo" />
