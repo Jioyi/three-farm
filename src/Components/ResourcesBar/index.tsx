@@ -16,6 +16,7 @@ import SellIcon from '@mui/icons-material/Sell';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 //sub components
 import BuyMenu from './BuyMenu';
+import Map from '../Map';
 
 const Nav = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -89,7 +90,7 @@ const ResourcesBar = () => {
     }, [exp]);
 
     return (
-        <>
+        <>  <Portal isShown={true} close={()=> {}} element={<Map/>}/>
             <Portal isShown={buy} close={() => setBuy(false)} element={<BuyMenu />} />
             <Nav>
                 <Box
