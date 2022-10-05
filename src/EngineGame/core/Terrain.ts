@@ -23,14 +23,6 @@ export class Terrain extends THREE.Mesh {
         this.frustumCulled = false;
         this.receiveShadow = true;
         this.name = 'Terrain';
-
-        const colorLinesCenter = 0x336600;
-        const colorLinesGrid = new THREE.Color('#336600');
-        const gridHelper = new THREE.GridHelper(this._mapSize, this._mapSize, colorLinesCenter, colorLinesGrid);
-        gridHelper.name = 'grid';
-        gridHelper.position.set(96 / 2 - 0.5, 0.001, this._mapSize / 2 - 0.5);
-        this.add(gridHelper);
-
         this._assignGeometry(tiles);
     }
 

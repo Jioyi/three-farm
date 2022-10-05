@@ -9,6 +9,16 @@ export interface TerrainData {
     tiles?: TileData[];
 }
 
+export interface SlostData {
+    sold: boolean;
+    price: number;
+    position: {
+        x: number;
+        y: number;
+    };
+    grid: THREE.GridHelper;
+}
+
 export interface TileData {
     empty: boolean;
     sold: boolean;

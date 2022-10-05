@@ -8,6 +8,7 @@ import Button from '@mui/material/Button';
 import CardMedia from '@mui/material/CardMedia';
 import IconButton from '@mui/material/IconButton';
 // Icons
+import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 // Contexts
@@ -18,6 +19,23 @@ import ItemPreview from '../ItemPreview';
 // Interface
 import { AssetData, CategoryData } from '../../EngineGame/interfaces/index';
 import Tooltip from '../Tooltip';
+
+const CustomIconButtonClose = styled(IconButton)(({ theme }) => ({
+    margin: 5,
+    padding: 2,
+    background: '#ff7f7f',
+    border: '3px solid',
+    borderColor: '#333300',
+    '& .MuiSvgIcon-root': {
+        color: '#333300'
+    },
+    '&:hover': {
+        background: '#ff0000',
+        '& .MuiSvgIcon-root': {
+            color: '#333300'
+        }
+    }
+}));
 
 const CustomIconButton = styled(IconButton)(({ theme }) => ({
     padding: 0,
@@ -36,6 +54,9 @@ const CustomIconButton = styled(IconButton)(({ theme }) => ({
 }));
 
 const CustomTypography = styled(Typography)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
     color: '#ffcc00',
     padding: 5,
     fontSize: '1.5rem',
@@ -181,7 +202,12 @@ const Store = () => {
                     }}
                 >
                     <Box display="flex" justifyContent="center" alignItems="center">
-                        <CustomTypography>Store</CustomTypography>
+                        <CustomTypography flexGrow={1}>Store</CustomTypography>
+                        <Box>
+                            <CustomIconButtonClose onClick={toggleStore}>
+                                <CloseIcon sx={{ fontSize: 22 }} />
+                            </CustomIconButtonClose>
+                        </Box>
                     </Box>
                     <Grid container alignItems="top">
                         <Box
@@ -285,7 +311,8 @@ const Store = () => {
                                                 component="img"
                                                 sx={{
                                                     width: 20,
-                                                    height: 20
+                                                    height: 20,
+                                                    userSelect: 'none'
                                                 }}
                                                 image={'assets/icons/coin.png'}
                                                 alt={'price'}
@@ -295,7 +322,8 @@ const Store = () => {
                                                 justifyContent="center"
                                                 alignItems="center"
                                                 sx={{
-                                                    padding: 0.5
+                                                    padding: 0.5,
+                                                    userSelect: 'none'
                                                 }}
                                             >
                                                 {target.price}

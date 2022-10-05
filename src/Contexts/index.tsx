@@ -1,6 +1,6 @@
 import React from 'react';
 import EngineGame from '../EngineGame';
-import { GameData } from '../EngineGame/interfaces';
+import { GameData, SlostData } from '../EngineGame/interfaces';
 
 interface UserProviderProps {
     children: React.ReactNode;
@@ -10,11 +10,15 @@ const UserContext = React.createContext({
     setEngine: (_EngineGame: EngineGame) => {},
     toggleCustomize: () => {},
     toggleStore: () => {},
+    toggleGameMap: () => {},
     toggleSettings: () => {},
     createGameObject: (_nameAssets: string) => {},
     changeVolume: (_volume: number) => {},
     eventGameHandler: (...args: any[]) => {},
     setAvatarImage: (...args: any[]) => {},
+    setAvatarNickname: (...args: any[]) => {},
+    buySlot: (_x: number, _y: number) => {},
+    sellSlot: (_x: number, _y: number) => {},
     loading: false,
     progress: 0,
     gameData: {} as any,
@@ -25,14 +29,19 @@ const UserContext = React.createContext({
     },
     money: 0,
     avatarImage: 1,
+    avatarNickname: 'Jioyi',
     openCustomize: false,
     openStore: false,
-    openSettings: false
+    openGameMap: false,
+    openSettings: false,
+    slots: undefined as any
 });
 
 export const UserContextProvider = ({ children }: UserProviderProps) => {
     const [Engine, setEngine] = React.useState<EngineGame>();
     const [gameData, setGameData] = React.useState<GameData>();
+    const [slots, setSlots] = React.useState<SlostData[][]>();
+
     const [money, setMoney] = React.useState(0);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [avatar, setAvatar] = React.useState({
@@ -41,8 +50,11 @@ export const UserContextProvider = ({ children }: UserProviderProps) => {
         expTotal: 200
     });
 
-    const [avatarImage, setAvatarImage] = React.useState(1);
+    const [avatarImage, setAvatarImage] = React.useState(2);
+    const [avatarNickname, setAvatarNickname] = React.useState('Jioyi');
+
     const [openStore, setOpenStore] = React.useState(false);
+    const [openGameMap, setOpenGameMap] = React.useState(false);
     const [openCustomize, setOpenCustomize] = React.useState(false);
     const [openSettings, setOpenSettings] = React.useState(false);
 
@@ -63,6 +75,12 @@ export const UserContextProvider = ({ children }: UserProviderProps) => {
             case 'setMoney':
                 setMoney(data);
                 break;
+            case 'setAvatarNickname':
+                setAvatarNickname(data);
+                break;
+            case 'setSlots':
+                setSlots(data);
+                break;
         }
     };
 
@@ -80,6 +98,9 @@ export const UserContextProvider = ({ children }: UserProviderProps) => {
             toggleStore: () => {
                 setOpenStore((prevMode) => !prevMode);
             },
+            toggleGameMap: () => {
+                setOpenGameMap((prevMode) => !prevMode);
+            },
             toggleSettings: () => {
                 setOpenSettings((prevMode) => !prevMode);
             },
@@ -93,7 +114,18 @@ export const UserContextProvider = ({ children }: UserProviderProps) => {
                     Engine.changeVolume(_volume);
                 }
             },
+            buySlot: (_x: number, _y: number) => {
+                if (Engine) {
+                    Engine.buySlot(_x, _y);
+                }
+            },
+            sellSlot: (_x: number, _y: number) => {
+                if (Engine) {
+                    Engine.sellSlot(_x, _y);
+                }
+            },
             setAvatarImage,
+            setAvatarNickname,
             eventGameHandler,
             loading,
             progress,
@@ -101,11 +133,14 @@ export const UserContextProvider = ({ children }: UserProviderProps) => {
             avatar,
             money,
             avatarImage,
+            avatarNickname,
             openCustomize,
             openStore,
-            openSettings
+            openGameMap,
+            openSettings,
+            slots
         }),
-        [Engine, loading, progress, gameData, avatar, money, avatarImage, openCustomize, openStore, openSettings]
+        [Engine, loading, progress, gameData, avatar, money, avatarImage, avatarNickname, openCustomize, openStore, openGameMap, openSettings, slots]
     );
 
     return <UserContext.Provider value={values}>{children}</UserContext.Provider>;

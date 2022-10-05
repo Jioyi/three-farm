@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '../Tooltip';
 // Icons
 import SettingsIcon from '@mui/icons-material/Settings';
+import GitHubIcon from '@mui/icons-material/GitHub';
 import StoreIcon from '@mui/icons-material/Store';
 import MapIcon from '@mui/icons-material/Map';
 import SaveIcon from '@mui/icons-material/Save';
@@ -55,7 +56,11 @@ const CustomTypography = styled(Typography)(({ theme }) => ({
 }));
 
 const ResourcesBar = () => {
-    const { toggleSettings, toggleStore, money } = useUserContext();
+    const { toggleSettings, toggleStore, toggleGameMap, money } = useUserContext();
+
+    const handleGitHub = () => {
+        window.open('https://github.com/Jioyi', '_blank');
+    };
 
     return (
         <Nav>
@@ -108,6 +113,7 @@ const ResourcesBar = () => {
                     </Tooltip>
                     <Tooltip title="Map">
                         <MapIcon
+                            onClick={toggleGameMap}
                             sx={{
                                 fontSize: 26,
                                 marginLeft: 2,
@@ -133,6 +139,11 @@ const ResourcesBar = () => {
                         />
                     </Tooltip>
                     <Box sx={{ flexGrow: 1 }}></Box>
+                    <Tooltip title="GitHub">
+                        <CustomIconButton sx={{ fontSize: 22 }} onClick={handleGitHub}>
+                            <GitHubIcon sx={{ fontSize: 22 }} />
+                        </CustomIconButton>
+                    </Tooltip>
                     <Tooltip title="Settings">
                         <CustomIconButton sx={{ fontSize: 22, marginRight: 2 }} onClick={toggleSettings}>
                             <SettingsIcon sx={{ fontSize: 22 }} />

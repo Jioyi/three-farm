@@ -3,12 +3,13 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
-import { GameData, GamePosition, IGameObject, TerrainData } from './interfaces';
+import { GameData, GamePosition, IGameObject, SlostData, TerrainData } from './interfaces';
 import { Terrain } from './core/Terrain';
 import { GameObject } from './core/GameObject';
 import MouseEvents from './core/MouseEvents';
 import './style/base.css';
 import { BasicSoundController } from './core/BasicSoundController';
+import Grid from '@mui/material/Grid';
 
 export default class EngineGame {
     protected _cameraStarted: GamePosition = { x: 12, y: 12 };
@@ -40,6 +41,12 @@ export default class EngineGame {
     private _mouseEvents!: MouseEvents;
     private _terrainData!: TerrainData;
     private _loadingManager!: THREE.LoadingManager;
+
+    private _slots: SlostData[][] = [];
+    private _colorGreen = 0x336600;
+    private _colorLinesGreen = new THREE.Color('#336600');
+    private _colorRed = 0xff0000;
+    private _colorLinesRed = new THREE.Color('#ff0000');
 
     constructor(_canvas: HTMLCanvasElement, _eventGameHandler: (...args: any[]) => any) {
         this.canvas = _canvas;
@@ -114,8 +121,41 @@ export default class EngineGame {
         await this._loadGameData('assets/data/game_data.json');
         await this._loadTerrainData('assets/terrains/terrain1.json');
         this._buildLoadingManager();
+        this._generateSlots();
         await this._generateMap();
         this._buildMouseEvents();
+    };
+
+    private _generateSlots = () => {
+        const slotSize = 12;
+        this._slots = Array(slotSize)
+            .fill(slotSize)
+            .map((_entry) => Array(slotSize));
+
+        for (let x = 0; x < slotSize; x++) {
+            for (let y = 0; y < slotSize; y++) {
+                const extraPrice = (16144 * x) / 10 + (16144 * y) / 10;
+
+                const slotGrid = new THREE.GridHelper(
+                    8,
+                    8,
+                    y < 3 && x < 3 ? this._colorGreen : this._colorRed,
+                    y < 3 && x < 3 ? this._colorLinesGreen : this._colorLinesRed
+                );
+                slotGrid.name = 'SlotGrid';
+                slotGrid.position.set(y * 8 + 3.5, 0.001, x * 8 + 3.5);
+                this.scene.add(slotGrid);
+                const slot: SlostData = {
+                    grid: slotGrid,
+                    sold: y < 3 && x < 3 ? true : false,
+                    price: Math.round(16144 + extraPrice),
+                    position: { x: x, y: y }
+                };
+                this._slots[x][y] = slot;
+            }
+        }
+
+        this._eventGameHandler({ type: 'setSlots', data: this._slots });
     };
 
     private _onWindowResize = () => {
@@ -301,5 +341,58 @@ export default class EngineGame {
     set money(_number: number) {
         this._eventGameHandler({ type: 'setMoney', data: _number });
         this._money = _number;
+    }
+
+    public buySlot(_x: number, _y: number) {
+        if (this._slots[_x][_y].sold) return;
+        if (this.money < this._slots[_x][_y].price) return;
+
+        for (let x = _x * 8; x < _x * 8 + 8; x++) {
+            for (let y = _y; y < _y * 8 + 8; y++) {
+                this.terrain.tiles[x][y].sold = true;
+            }
+        }
+
+        this.money -= this._slots[_x][_y].price;
+        this._slots[_x][_y].sold = true;
+        this._eventGameHandler({ type: 'setSlots', data: this._slots });
+
+        const newSlotGrid = new THREE.GridHelper(8, 8, this._colorGreen, this._colorLinesGreen);
+        newSlotGrid.name = 'SlotGrid';
+        newSlotGrid.position.set(_y * 8 + 3.5, 0.001, _x * 8 + 3.5);
+        this.scene.remove(this._slots[_x][_y].grid);
+        this._slots[_x][_y].grid = newSlotGrid;
+        this.scene.add(newSlotGrid);
+    }
+
+    public sellSlot(_x: number, _y: number) {
+        if (!this._slots[_x][_y].sold) return;
+
+        let isPossible = true;
+
+        for (let x = _x * 8; x < _x * 8 + 8; x++) {
+            for (let y = _y; y < _y * 8 + 8; y++) {
+                if (!this.terrain.tiles[x][y].empty) isPossible = false;
+            }
+        }
+
+        if (!isPossible) return;
+
+        for (let x = _x * 8; x < _x * 8 + 8; x++) {
+            for (let y = _y; y < _y * 8 + 8; y++) {
+                this.terrain.tiles[x][y].sold = false;
+            }
+        }
+
+        this.money += this._slots[_x][_y].price;
+        this._slots[_x][_y].sold = false;
+        this._eventGameHandler({ type: 'setSlots', data: this._slots });
+
+        const newSlotGrid = new THREE.GridHelper(8, 8, this._colorRed, this._colorLinesRed);
+        newSlotGrid.name = 'SlotGrid';
+        newSlotGrid.position.set(_y * 8 + 3.5, 0.001, _x * 8 + 3.5);
+        this.scene.remove(this._slots[_x][_y].grid);
+        this._slots[_x][_y].grid = newSlotGrid;
+        this.scene.add(newSlotGrid);
     }
 }

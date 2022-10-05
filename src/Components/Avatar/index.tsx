@@ -20,7 +20,7 @@ const CustomTypography = styled(Typography)(({ theme }) => ({
 }));
 
 const Avatar = () => {
-    const { avatar, toggleCustomize, avatarImage } = useUserContext();
+    const { avatar, toggleCustomize, avatarImage, avatarNickname } = useUserContext();
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <Box
@@ -157,7 +157,7 @@ const Avatar = () => {
                         padding: 0.5
                     }}
                 >
-                    <CustomTypography>Jioyi ({avatar.level})</CustomTypography>
+                    <CustomTypography>{avatarNickname}</CustomTypography>
                 </Box>
             </Box>
         </Box>

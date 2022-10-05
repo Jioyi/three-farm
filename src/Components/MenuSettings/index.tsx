@@ -3,15 +3,37 @@ import React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import Slider from '@mui/material/Slider';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 // Icons
 import VolumeUp from '@mui/icons-material/VolumeUp';
+import CloseIcon from '@mui/icons-material/Close';
 // Contexts
 import { useUserContext } from '../../Contexts';
 
+const CustomIconButtonClose = styled(IconButton)(({ theme }) => ({
+    margin: 5,
+    padding: 2,
+    background: '#ff7f7f',
+    border: '3px solid',
+    borderColor: '#333300',
+    '& .MuiSvgIcon-root': {
+        color: '#333300'
+    },
+    '&:hover': {
+        background: '#ff0000',
+        '& .MuiSvgIcon-root': {
+            color: '#333300'
+        }
+    }
+}));
+
 const CustomTypography = styled(Typography)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
     color: '#ffcc00',
     padding: 5,
     fontSize: '1.5rem',
@@ -141,7 +163,12 @@ const MenuSettings = () => {
                     }}
                 >
                     <Box display="flex" justifyContent="center" alignItems="center">
-                        <CustomTypography>Game Settings</CustomTypography>
+                        <CustomTypography flexGrow={1}>Game Settings</CustomTypography>
+                        <Box>
+                            <CustomIconButtonClose onClick={toggleSettings}>
+                                <CloseIcon sx={{ fontSize: 22 }} />
+                            </CustomIconButtonClose>
+                        </Box>
                     </Box>
                     <Box display="flex" justifyContent="center" alignItems="center">
                         <CustomTypography2>Volume</CustomTypography2>

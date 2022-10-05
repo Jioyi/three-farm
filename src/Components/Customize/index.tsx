@@ -4,12 +4,36 @@ import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import TableContainer from '@mui/material/TableContainer';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import CardMedia from '@mui/material/CardMedia';
 import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+// Icons
+import CloseIcon from '@mui/icons-material/Close';
 // Contexts
 import { useUserContext } from '../../Contexts';
 
+const CustomIconButtonClose = styled(IconButton)(({ theme }) => ({
+    margin: 5,
+    padding: 2,
+    background: '#ff7f7f',
+    border: '3px solid',
+    borderColor: '#333300',
+    '& .MuiSvgIcon-root': {
+        color: '#333300'
+    },
+    '&:hover': {
+        background: '#ff0000',
+        '& .MuiSvgIcon-root': {
+            color: '#333300'
+        }
+    }
+}));
+
 const CustomTypography = styled(Typography)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
     color: '#ffcc00',
     padding: 5,
     fontSize: '1.5rem',
@@ -18,6 +42,44 @@ const CustomTypography = styled(Typography)(({ theme }) => ({
     textShadow: ' 0 -1px #000000, 1px 1px #000000, -1px -1px #000000, 1px -1px #000000, -1px 1px #000000',
     userSelect: 'none'
 }));
+
+const CustomTextField = styled(TextField)({
+    textShadow: ' 0 -1px #000000, 1px 1px #000000, -1px -1px #000000, 1px -1px #000000, -1px 1px #000000',
+    userSelect: 'none',
+    '& label.Mui-focused': {
+        letterSpacing: '1px',
+        color: '#ffcc00'
+    },
+    '& .MuiInput-underline:after': {
+        borderBottomColor: '#7a5126'
+    },
+    '& .MuiOutlinedInput-root': {
+        '& fieldset': {
+            borderColor: 'red',
+            border: '3px solid'
+        },
+        '&:hover fieldset': {
+            borderColor: '#ffcc00',
+            border: '3px solid'
+        },
+        '&.Mui-focused fieldset': {
+            borderColor: '#7a5126',
+            border: '3px solid'
+        }
+    },
+    '& .MuiInputBase-input': {
+        borderRadius: 4,
+        position: 'relative',
+        width: 'auto',
+        padding: '10px 12px',
+        color: '#ffcc00',
+        fontSize: '1.2rem',
+        fontWeight: 'bold',
+        letterSpacing: '0.1em',
+        textShadow: ' 0 -1px #000000, 1px 1px #000000, -1px -1px #000000, 1px -1px #000000, -1px 1px #000000',
+        '&:focus': {}
+    }
+});
 
 const CustomButton = styled(Button)({
     color: '#ffffff',
@@ -56,11 +118,17 @@ const CustomButton = styled(Button)({
 });
 
 const Customize = () => {
-    const { toggleCustomize, avatarImage, setAvatarImage } = useUserContext();
-    const [nickname, setNickname] = React.useState('Jioyi');
+    const { toggleCustomize, avatarImage, setAvatarImage, avatarNickname, setAvatarNickname } = useUserContext();
 
-    const handelNickname = (e: any) => {
-        setNickname(e.target.value);
+    const [nickname, setNickname] = React.useState(avatarNickname);
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setNickname(event.target.value);
+    };
+
+    const handleSave = () => {
+        setAvatarNickname(nickname);
+        toggleCustomize();
     };
 
     return (
@@ -85,14 +153,27 @@ const Customize = () => {
                     }}
                 >
                     <Box display="flex" justifyContent="center" alignItems="center">
-                        <CustomTypography>Customize Avatar</CustomTypography>
+                        <CustomTypography flexGrow={1}>Customize Avatar</CustomTypography>
+                        <Box>
+                            <CustomIconButtonClose onClick={toggleCustomize}>
+                                <CloseIcon sx={{ fontSize: 22 }} />
+                            </CustomIconButtonClose>
+                        </Box>
+                    </Box>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: 1
+                        }}
+                    >
+                        <CustomTextField label="Nickname" value={nickname} onChange={handleChange} focused />
                     </Box>
                     <TableContainer
                         sx={{
                             display: 'flex',
-                            boxShadow: 1,
                             userSelect: 'none',
-                            borderColor: '#000000',
                             padding: 1,
                             paddingRight: '0.5rem',
                             maxWidth: 440,
@@ -163,7 +244,7 @@ const Customize = () => {
                             })}
                     </TableContainer>
                     <Box display="flex" justifyContent="center" alignItems="center">
-                        <CustomButton variant="contained" onClick={toggleCustomize} disableRipple>
+                        <CustomButton variant="contained" onClick={handleSave} disableRipple>
                             Save Avatar
                         </CustomButton>
                     </Box>
