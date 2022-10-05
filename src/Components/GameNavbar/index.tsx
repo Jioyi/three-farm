@@ -4,9 +4,9 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import { alpha } from '@mui/material';
+import Tooltip from '../Tooltip';
 // Contexts
 import { useUserContext } from '../../Contexts';
-import Tooltip from '../Tooltip';
 
 const Nav = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -31,10 +31,10 @@ const CustomTypography = styled(Typography)(({ theme }) => ({
 }));
 
 const GameNavbar = () => {
-    const { testFunct } = useUserContext();
+    const { createGameObject } = useUserContext();
 
     const handleOnClick = () => {
-        testFunct('Hello World!');
+        createGameObject('house');
     };
 
     return (

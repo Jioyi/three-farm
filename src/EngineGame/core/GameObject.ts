@@ -1,23 +1,28 @@
+import { v4 as uuidv4 } from 'uuid';
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
-import { GameObjectData, IGameObject } from '../interfaces';
+import { AssetData, GameObjectData } from '../interfaces';
+import EngineGame from '..';
 
 export class GameObject {
-    private _scene: THREE.Scene;
+    private _engine: EngineGame;
     private _selected: boolean = false;
     private _targetable: boolean = false;
+    private _red: boolean = false;
+
     private _label: CSS2DObject;
     private _circle: Line2;
-    private _models: any;
-    private _gameObjects: any;
 
     public data: GameObjectData;
+    public assetData: AssetData;
     public model: any;
+
     public uuid: string;
-    public obj: any;
+    public mesh: any;
+    public subMesh: any;
     public area: any;
 
     private _div: HTMLDivElement;
@@ -28,50 +33,36 @@ export class GameObject {
 
     private _dummy = new THREE.Object3D();
 
-    constructor(
-        _scene: THREE.Scene,
-        _gameObjectData: GameObjectData,
-        _model: any,
-        _models: any,
-        _mixers: THREE.AnimationMixer[],
-        _animations: any,
-        _gameObjects: IGameObject
-    ) {
-        this._scene = _scene;
-        this._targetable = _gameObjectData.targetable;
-        this._models = _models;
-        this._gameObjects = _gameObjects;
+    constructor(_engine: EngineGame, _gameObjectData: GameObjectData) {
+        this._engine = _engine;
         this.data = _gameObjectData;
-        this.model = _model;
+
+        let assetIndex = this._engine.gameData.assets.findIndex((asset) => asset.id === _gameObjectData.object_id);
+        this.assetData = this._engine.gameData.assets[assetIndex];
+        this._targetable = this._engine.gameData.assets[assetIndex].targetable;
+
+        let modelIndex = this._engine.uniqueModels.findIndex((model: any) => model.name === this._engine.gameData.assets[assetIndex].name);
+        this.model = this._engine.uniqueModels[modelIndex];
 
         let instancedMesh = new THREE.InstancedMesh(this.model.geometry, this.model.material, 1);
-        instancedMesh.rotation.set(0, this.data.rotation, 0);
+        if (this.assetData.autoRotate) {
+            instancedMesh.rotation.set(0, Math.random() * Math.PI, 0);
+        } else {
+            instancedMesh.rotation.set(0, this.data.rotation, 0);
+        }
         instancedMesh.position.set(this.data.position.y, 0, this.data.position.x);
         instancedMesh.setMatrixAt(0, this._dummy.matrix);
-        instancedMesh.name = this.data.name;
-        instancedMesh.castShadow = this.data.castShadow;
-        this.obj = instancedMesh;
-        this.uuid = instancedMesh.uuid;
+        instancedMesh.name = this.assetData.name;
+        instancedMesh.castShadow = this.assetData.castShadow;
+        this.uuid = this.data.uuid ? this.data.uuid : uuidv4();
+        this.mesh = instancedMesh;
 
-        if (this.data.name === 'windmill') {
-            let i = _models.findIndex((x: any) => x.name === 'windmill2');
-            if (i >= 0) {
-                const model = _models[i].clone();
-                const mixer = new THREE.AnimationMixer(model);
-                _mixers.push(mixer);
-                this.obj.add(model);
-
-                let a = _animations.findIndex((x: any) => x.name === 'windmillAction');
-                if (a >= 0) {
-                    const action = mixer.clipAction(_animations[a]);
-                    action.play();
-                }
-            }
+        if (this.assetData.meshAnimation) {
+            this._addMeshAnimation(this.assetData.meshAnimation.modelName, this.assetData.meshAnimation.actionName);
         }
 
-        //Create circle area
         const points = [];
-        const radius = this.data.width_size > this.data.length_size ? this.data.width_size / 2 : this.data.length_size / 2;
+        const radius = this.assetData.sizeX > this.assetData.sizeY ? this.assetData.sizeX / 2 : this.assetData.sizeY / 2;
         for (let i = 0; i <= 360; i = i + 15) {
             points.push(Math.sin(i * (Math.PI / 180)) * radius, Math.cos(i * (Math.PI / 180)) * radius, 0);
         }
@@ -87,7 +78,7 @@ export class GameObject {
         line.computeLineDistances();
         line.scale.set(1, 1, 1);
         line.rotation.set(Math.PI / 2, 0, 0);
-        line.position.set(this.data.width_size > 1 ? this.data.width_size / 2 - 0.5 : 0, 0.04, this.data.length_size > 1 ? this.data.length_size / 2 - 0.5 : 0);
+        line.position.set(this.assetData.sizeX > 1 ? this.assetData.sizeX / 2 - 0.5 : 0, 0.04, this.assetData.sizeY > 1 ? -this.assetData.sizeY / 2 + 0.5 : 0);
         this._circle = line;
 
         //Create label text
@@ -96,7 +87,7 @@ export class GameObject {
 
         const textLabel = document.createElement('div');
         textLabel.className = 'textLabel';
-        textLabel.textContent = this.data.label;
+        textLabel.textContent = this.assetData.label;
         this._div.appendChild(textLabel);
 
         this._healthBar = document.createElement('div');
@@ -105,20 +96,7 @@ export class GameObject {
         this._healthBar.dataset.dataValue = this._health.toString();
 
         this._bar = document.createElement('div');
-        switch (this.data.name) {
-            case 'tree1':
-                this._bar.className = 'bar-tree';
-                break;
-            case 'tree2':
-                this._bar.className = 'bar-tree';
-                break;
-            case 'stone1':
-                this._bar.className = 'bar-stone';
-                break;
-            default:
-                this._bar.className = 'bar-player-1';
-                break;
-        }
+        this._bar.className = this.assetData.labelClassName;
         this._healthBar.appendChild(this._bar);
         this._hit = document.createElement('div');
         this._hit.className = 'hit';
@@ -127,9 +105,9 @@ export class GameObject {
         this._div.appendChild(this._healthBar);
         this._label = new CSS2DObject(this._div);
         this._label.position.set(
-            this.data.width_size > 1 ? this.data.width_size / 2 - 0.5 : 0,
-            this.data.label_altitude,
-            this.data.length_size > 1 ? this.data.length_size / 2 - 0.5 : 0
+            this.assetData.sizeX > 1 ? this.assetData.sizeX / 2 - 0.5 : 0,
+            this.assetData.labelAltitude,
+            this.assetData.sizeY > 1 ? -this.assetData.sizeY / 2 + 0.5 : 0
         );
         this._label.layers.set(0);
 
@@ -137,7 +115,7 @@ export class GameObject {
         instancedMesh.updateMatrixWorld(true);
         box.applyMatrix4(instancedMesh.matrix);
         this.area = box;
-        this._scene.add(instancedMesh);
+        this._engine.scene.add(instancedMesh);
     }
 
     get targetable(): boolean {
@@ -148,17 +126,39 @@ export class GameObject {
         this._targetable = _bool;
     }
 
+    get red(): boolean {
+        return this._red;
+    }
+
+    set red(_bool: boolean) {
+        if (_bool) {
+            this.mesh.material = this.model.material;
+            if (this.subMesh) {
+                let indexSubModel = this._engine.uniqueModels.findIndex((model: any) => model.name === this.assetData.meshAnimation?.modelName);
+                if (indexSubModel >= 0) {
+                    this.subMesh.material = this._engine.uniqueModels[indexSubModel].material;
+                }
+            }
+        } else {
+            this.mesh.material = this._engine.materialRed;
+            if (this.subMesh) {
+                this.subMesh.material = this._engine.materialRed;
+            }
+        }
+        this._red = _bool;
+    }
+
     get selected(): boolean {
         return this._selected;
     }
 
     set selected(_bool: boolean) {
         if (_bool) {
-            this.obj.add(this._label);
-            this.obj.add(this._circle);
+            this.mesh.add(this._label);
+            this.mesh.add(this._circle);
         } else {
-            this.obj.remove(this._label);
-            this.obj.remove(this._circle);
+            this.mesh.remove(this._label);
+            this.mesh.remove(this._circle);
         }
         this._selected = _bool;
     }
@@ -186,74 +186,105 @@ export class GameObject {
         }, 500);
     }
 
-    public updateFence = () => {
-        let forward = Object.keys(this._gameObjects).find(
-            (key: string) =>
-                this._gameObjects[key].data.name.includes('fence') &&
-                this._gameObjects[key].data.position.y === this.data.position.y &&
-                this._gameObjects[key].data.position.x === this.data.position.x - 1
-        );
-        let backward = Object.keys(this._gameObjects).find(
-            (key: string) =>
-                this._gameObjects[key].data.name.includes('fence') &&
-                this._gameObjects[key].data.position.y === this.data.position.y &&
-                this._gameObjects[key].data.position.x === this.data.position.x + 1
-        );
-        let left = Object.keys(this._gameObjects).find(
-            (key: string) =>
-                this._gameObjects[key].data.name.includes('fence') &&
-                this._gameObjects[key].data.position.y === this.data.position.y - 1 &&
-                this._gameObjects[key].data.position.x === this.data.position.x
-        );
-        let right = Object.keys(this._gameObjects).find(
-            (key: string) =>
-                this._gameObjects[key].data.name.includes('fence') &&
-                this._gameObjects[key].data.position.y === this.data.position.y + 1 &&
-                this._gameObjects[key].data.position.x === this.data.position.x
-        );
+    public destroy = () => {
+        this._engine.scene.remove(this.mesh);
+        this.mesh.dispose();
+    };
 
-        if (forward && left && backward && right) {
+    public updateFence = (_updateNext: boolean) => {
+        let top = Object.keys(this._engine.gameObjects).find(
+            (key: string) =>
+                this._engine.gameObjects[key].assetData.name.includes('fence') &&
+                this._engine.gameObjects[key].data.position.y === this.data.position.y &&
+                this._engine.gameObjects[key].data.position.x === this.data.position.x - 1
+        );
+        let bottom = Object.keys(this._engine.gameObjects).find(
+            (key: string) =>
+                this._engine.gameObjects[key].assetData.name.includes('fence') &&
+                this._engine.gameObjects[key].data.position.y === this.data.position.y &&
+                this._engine.gameObjects[key].data.position.x === this.data.position.x + 1
+        );
+        let left = Object.keys(this._engine.gameObjects).find(
+            (key: string) =>
+                this._engine.gameObjects[key].assetData.name.includes('fence') &&
+                this._engine.gameObjects[key].data.position.y === this.data.position.y - 1 &&
+                this._engine.gameObjects[key].data.position.x === this.data.position.x
+        );
+        let right = Object.keys(this._engine.gameObjects).find(
+            (key: string) =>
+                this._engine.gameObjects[key].assetData.name.includes('fence') &&
+                this._engine.gameObjects[key].data.position.y === this.data.position.y + 1 &&
+                this._engine.gameObjects[key].data.position.x === this.data.position.x
+        );
+        if (top && left && bottom && right) {
             this._updateFenceModel('fence2', 0);
-        } else if ((forward && left && backward) || (left && backward && right) || (backward && right && forward) || (right && forward && left)) {
-            if (forward && left && backward) {
+        } else if ((top && left && bottom) || (left && bottom && right) || (bottom && right && top) || (right && top && left)) {
+            if (top && left && bottom) {
                 this._updateFenceModel('fence3', -Math.PI / 2);
-            } else if (left && backward && right) {
+            } else if (left && bottom && right) {
                 this._updateFenceModel('fence3', 0);
-            } else if (backward && right && forward) {
+            } else if (bottom && right && top) {
                 this._updateFenceModel('fence3', Math.PI / 2);
             } else {
                 this._updateFenceModel('fence3', -Math.PI);
             }
-        } else if ((forward && left) || (left && backward) || (backward && right) || (right && forward)) {
-            if (forward && left) {
+        } else if ((top && left) || (left && bottom) || (bottom && right) || (right && top)) {
+            if (top && left) {
                 this._updateFenceModel('fence4', -Math.PI);
-            } else if (left && backward) {
+            } else if (left && bottom) {
                 this._updateFenceModel('fence4', -Math.PI / 2);
-            } else if (backward && right) {
+            } else if (bottom && right) {
                 this._updateFenceModel('fence4', 0);
             } else {
                 this._updateFenceModel('fence4', Math.PI / 2);
             }
-        } else if (forward || backward) {
+        } else if (top || bottom) {
             this._updateFenceModel('fence1', Math.PI / 2);
         } else {
             this._updateFenceModel('fence1', 0);
         }
+
+        if (_updateNext) {
+            if (top) this._engine.gameObjects[top].updateFence(false);
+            if (bottom) this._engine.gameObjects[bottom].updateFence(false);
+            if (left) this._engine.gameObjects[left].updateFence(false);
+            if (right) this._engine.gameObjects[right].updateFence(false);
+        }
     };
 
     private _updateFenceModel = (_name: string, _rotation: number) => {
-        let i = this._models.findIndex((x: any) => x.name === _name);
-        if (i <= -1) return;
+        if (this.mesh.name === _name) {
+            this.mesh.rotation.set(0, _rotation, 0);
+            return;
+        }
+        let indexModel = this._engine.uniqueModels.findIndex((x: any) => x.name === _name);
+        if (indexModel <= -1) return;
 
-        let instancedMesh = new THREE.InstancedMesh(this._models[i].geometry, this._models[i].material, 1);
+        let instancedMesh = new THREE.InstancedMesh(this._engine.uniqueModels[indexModel].geometry, this._engine.uniqueModels[indexModel].material, 1);
         instancedMesh.rotation.set(0, _rotation, 0);
         instancedMesh.position.set(this.data.position.y, 0, this.data.position.x);
         instancedMesh.setMatrixAt(0, this._dummy.matrix);
-        instancedMesh.name = this.data.name;
-        instancedMesh.castShadow = this.data.castShadow;
-        this._scene.remove(this.obj);
-        this.obj = instancedMesh;
-        this.uuid = instancedMesh.uuid;
-        this._scene.add(this.obj);
+        instancedMesh.name = _name;
+        instancedMesh.castShadow = this.assetData.castShadow;
+        this._engine.scene.remove(this.mesh);
+        this.mesh.dispose();
+        this.mesh = instancedMesh;
+        this._engine.scene.add(this.mesh);
+    };
+
+    private _addMeshAnimation = (_modelName: string, _actionName: string) => {
+        let indexModel = this._engine.uniqueModels.findIndex((model: any) => model.name === _modelName);
+        if (indexModel >= 0) {
+            const model = this._engine.uniqueModels[indexModel].clone();
+            const mixer = new THREE.AnimationMixer(model);
+            this._engine.mixers.push(mixer);
+            this.mesh.add(model);
+            this.subMesh = model;
+            let indexAnimation = this._engine.animations.findIndex((animation: any) => animation.name === _actionName);
+            if (indexAnimation >= 0) {
+                const action = mixer.clipAction(this._engine.animations[indexAnimation]);
+                action.play();
+            }
+        }
     };
 }
