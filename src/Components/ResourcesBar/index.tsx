@@ -18,6 +18,7 @@ import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import BuyMenu from './BuyMenu';
 import Map from '../Map';
 import Customize from '../Customize';
+import Bank from '../Bank';
 
 const Nav = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -92,9 +93,7 @@ const ResourcesBar = () => {
 
     return (
         <>
-            {' '}
-            <Portal isShown={false} close={() => {}} element={<Map />} />
-            <Portal isShown={true} close={() => {}} element={<Customize />} />
+            <Portal isShown={true} close={() => {}} element={<Bank />} />
             <Portal isShown={buy} close={() => setBuy(false)} element={<BuyMenu />} />
             <Nav>
                 <Box

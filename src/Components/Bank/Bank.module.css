@@ -1,0 +1,26 @@
+.container {
+    padding: 10px;
+}
+.dashboard {
+    border: 5px solid #5ac5bd;
+    background-color: #00feca;
+    color: #001b12;
+    width: 250px;
+    padding-top: 10px;
+}
+.dashboard P {
+    margin: 0;
+    font-size: 12px;
+    margin-left: 10px;
+    margin-bottom: 5px;
+}
+.panel-num{
+    display: flex;
+    flex-wrap: wrap;
+    width: 160px;
+    height: 120px;
+}
+.panel-num button{
+    width: 40px;
+    height: 40px;
+}
