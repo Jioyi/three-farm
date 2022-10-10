@@ -1,11 +1,11 @@
 {
-    "money": 50000,
+    "money": 99999,
     "categories": [
         {
             "id": 0,
             "name": "Builds",
             "image": "assets/icons/builds.jpg",
-            "assets": [10, 11, 0, 1, 2]
+            "assets": [4, 12, 13, 10, 11, 0, 1, 2]
         },
         {
             "id": 1,
@@ -17,7 +17,7 @@
             "id": 2,
             "name": "Crops",
             "image": "assets/icons/crops.jpg",
-            "assets": []
+            "assets": [3]
         },
         {
             "id": 3,
@@ -31,6 +31,7 @@
             "id": 0,
             "name": "tree",
             "targetable": true,
+            "surface": 0,
             "label": "Tree",
             "labelAltitude": 1.3,
             "labelClassName": "bar-tree",
@@ -47,6 +48,7 @@
             "id": 1,
             "name": "rock",
             "targetable": true,
+            "surface": 0,
             "label": "Rock",
             "labelAltitude": 1.1,
             "labelClassName": "bar-stone",
@@ -61,8 +63,9 @@
         },
         {
             "id": 2,
-            "name": "fence1",
+            "name": "fence",
             "targetable": false,
+            "surface": 0,
             "label": "Fence",
             "labelAltitude": 0.6,
             "labelClassName": "bar-player",
@@ -72,13 +75,48 @@
             "autoRotate": false,
             "image": "assets/images/fence.png",
             "imageModel": "assets/images/fence.png",
-            "price": 600,
+            "price": 80,
             "description": "Prevents livestock from getting to fields."
+        },
+        {
+            "id": 3,
+            "name": "corn",
+            "targetable": true,
+            "surface": 0,
+            "label": "Corn",
+            "labelAltitude": 0.6,
+            "labelClassName": "bar-player",
+            "sizeX": 8,
+            "sizeY": 8,
+            "castShadow": false,
+            "autoRotate": false,
+            "image": "assets/images/corn.png",
+            "imageModel": "assets/images/corn.png",
+            "price": 75,
+            "description": "Removes a lot of nutrients from soil. Fertilize or rotate with other crops."
+        },
+        {
+            "id": 4,
+            "name": "ditch",
+            "targetable": false,
+            "surface": 0,
+            "label": "Ditch",
+            "labelAltitude": 0.6,
+            "labelClassName": "bar-player",
+            "sizeX": 1,
+            "sizeY": 1,
+            "castShadow": true,
+            "autoRotate": false,
+            "image": "assets/images/fence.png",
+            "imageModel": "assets/images/fence.png",
+            "price": 80,
+            "description": "When full of water, ditches irrigate fields."
         },
         {
             "id": 10,
             "name": "windmill",
             "targetable": true,
+            "surface": 8,
             "label": "Windmill",
             "labelAltitude": 3,
             "labelClassName": "bar-player",
@@ -99,6 +137,7 @@
             "id": 11,
             "name": "homestead",
             "targetable": true,
+            "surface": 0,
             "label": "Homestead",
             "labelAltitude": 2.5,
             "labelClassName": "bar-player",
@@ -110,6 +149,42 @@
             "imageModel": "assets/images/house.png",
             "price": 50000,
             "description": "Where the heart is. Do well and it will be your dream house."
+        },
+        {
+            "id": 12,
+            "name": "small_silo",
+            "targetable": true,
+            "surface": 0,
+            "label": "Small Silo",
+            "labelAltitude": 3,
+            "labelClassName": "bar-player",
+            "sizeX": 1,
+            "sizeY": 1,
+            "castShadow": true,
+            "autoRotate": false,
+            "image": "assets/images/small_silo.png",
+            "imageModel": "assets/images/small_silo.png",
+            "price": 800,
+            "description": "Store up to one harvested crop.",
+            "type": "storage"
+        },
+        {
+            "id": 13,
+            "name": "large_silo",
+            "targetable": true,
+            "surface": 0,
+            "label": "Large Silo",
+            "labelAltitude": 3,
+            "labelClassName": "bar-player",
+            "sizeX": 2,
+            "sizeY": 2,
+            "castShadow": true,
+            "autoRotate": false,
+            "image": "assets/images/large_silo.png",
+            "imageModel": "assets/images/large_silo.png",
+            "price": 2400,
+            "description": "Stores four harvesed crops.",
+            "type": "storage"
         }
     ]
 }

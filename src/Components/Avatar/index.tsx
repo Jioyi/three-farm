@@ -22,7 +22,17 @@ const CustomTypography = styled(Typography)(({ theme }) => ({
 const Avatar = () => {
     const { avatar, toggleCustomize, avatarImage, avatarNickname } = useUserContext();
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <Box
+            sx={{
+                display: 'flex',
+                position: 'absolute',
+                top: 100,
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 3
+            }}
+        >
             <Box
                 onClick={toggleCustomize}
                 sx={{

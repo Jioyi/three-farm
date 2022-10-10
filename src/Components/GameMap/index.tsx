@@ -145,8 +145,11 @@ const GameMap = () => {
                                 justifyContent: 'center',
                                 alignItems: 'center',
                                 perspective: '1000px',
-                                width: '400px',
-                                height: '250px'
+                                width: '380px',
+                                margin: 1,
+                                borderRadius: 2,
+                                height: '250px',
+                                background: '#a98159'
                             }}
                         >
                             <Box

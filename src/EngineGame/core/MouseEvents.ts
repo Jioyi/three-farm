@@ -44,6 +44,8 @@ export default class MouseEvents {
         this._engine.labelRenderer.domElement.addEventListener('mousedown', this._onMouseDown.bind(this), false);
         this._engine.labelRenderer.domElement.addEventListener('mouseup', this._onMouseUp.bind(this), false);
 
+        this._engine.labelRenderer.domElement.addEventListener('mousedown', this._onMouseDownTest.bind(this), false);
+
         this._frustum = new THREE.Frustum();
 
         this._createSelector();
@@ -83,7 +85,8 @@ export default class MouseEvents {
                 this._gameObjectTarget.data.position.x = this._targetX;
                 this._gameObjectTarget.data.position.y = this._targetY;
 
-                if (this._gameObjectTarget.assetData.name.includes('fence')) this._gameObjectTarget.updateFence(true);
+                if (this._gameObjectTarget.assetData.name === 'fence' || this._gameObjectTarget.assetData.name === 'ditch')
+                    this._gameObjectTarget.updateDirection(true);
 
                 let isPossible = true;
                 for (let x = this._targetX; x > this._targetX - this._gameObjectTarget.assetData.sizeX; x--) {
@@ -140,7 +143,7 @@ export default class MouseEvents {
                     }
                 }
                 if (this._engine.money < this._gameObjectTarget.assetData.price) isPossible = false;
-                
+
                 if (isPossible) {
                     for (let x = this._targetX; x > this._targetX - this._gameObjectTarget.assetData.sizeX; x--) {
                         for (let y = this._targetY; y < this._targetY + this._gameObjectTarget.assetData.sizeY; y++) {
@@ -148,10 +151,23 @@ export default class MouseEvents {
                         }
                     }
 
-                    this._gameObjectTarget.area.applyMatrix4(this._gameObjectTarget.mesh.matrix);
+                    this._gameObjectTarget.mesh.position.z = this._targetX;
+                    this._gameObjectTarget.mesh.position.x = this._targetY;
+
+                    this._gameObjectTarget.data.position.x = this._targetX;
+                    this._gameObjectTarget.data.position.y = this._targetY;
+
+                    this._gameObjectTarget.updateBox();
                     this._engine.gameObjects[this._gameObjectTarget.uuid] = this._gameObjectTarget;
-                    if (this._gameObjectTarget.assetData.name.includes('fence')) this._gameObjectTarget.updateFence(true);
+
+                    if (this._gameObjectTarget.assetData.name === 'fence' || this._gameObjectTarget.assetData.name === 'ditch')
+                        this._gameObjectTarget.updateDirection(true);
+
                     this._engine.money -= this._gameObjectTarget.assetData.price;
+                    if (this._gameObjectTarget.assetData.type === 'storage') {
+                        this._engine.storage += this._gameObjectTarget.assetData.sizeX * this._gameObjectTarget.assetData.sizeY;
+                    }
+
                     this._gameObjectTarget = undefined;
                     this.createGameObject(this._assetTarget!);
                 } else {
@@ -319,5 +335,15 @@ export default class MouseEvents {
         gameObject.mesh.position.x = this._targetY;
         this._gameObjectTarget = gameObject;
         this._assetTarget = _nameAssets;
+    };
+
+    private _onMouseDownTest = (_event: any) => {
+        this._pointer2.x = (_event.clientX / window.innerWidth) * 2 - 1;
+        this._pointer2.y = -(_event.clientY / window.innerHeight) * 2 + 1;
+        this._raycaster.setFromCamera(this._pointer2, this._engine.camera);
+        const intersects = this._raycaster.intersectObjects([this._engine.terrain]);
+        if (intersects.length > 0) {
+            console.log(Math.round(intersects[0].point.z), Math.round(intersects[0].point.x));
+        }
     };
 }
