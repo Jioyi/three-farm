@@ -1,6 +1,6 @@
 import React from 'react';
 import EngineGame from '../EngineGame';
-import { GameData, SlostData } from '../EngineGame/interfaces';
+import { Day, GameData, SlostData } from '../EngineGame/interfaces';
 
 interface UserProviderProps {
     children: React.ReactNode;
@@ -10,6 +10,7 @@ const UserContext = React.createContext({
     setEngine: (_EngineGame: EngineGame) => {},
     toggleCustomize: () => {},
     toggleStore: () => {},
+    toggleCalendar: () => {},
     toggleGameMap: () => {},
     toggleSettings: () => {},
     createGameObject: (_nameAssets: string) => {},
@@ -19,7 +20,7 @@ const UserContext = React.createContext({
     setAvatarNickname: (...args: any[]) => {},
     buySlot: (_x: number, _y: number) => {},
     sellSlot: (_x: number, _y: number) => {},
-    loading: false,
+    loading: true,
     progress: 0,
     gameData: {} as any,
     avatar: {
@@ -28,13 +29,16 @@ const UserContext = React.createContext({
         expTotal: 200
     },
     money: 0,
+    storage: 0,
     avatarImage: 1,
     avatarNickname: 'Jioyi',
     openCustomize: false,
     openStore: false,
+    openCalendar: false,
     openGameMap: false,
     openSettings: false,
-    slots: undefined as any
+    slots: undefined as any,
+    forecast: undefined as any
 });
 
 export const UserContextProvider = ({ children }: UserProviderProps) => {
@@ -43,6 +47,7 @@ export const UserContextProvider = ({ children }: UserProviderProps) => {
     const [slots, setSlots] = React.useState<SlostData[][]>();
 
     const [money, setMoney] = React.useState(0);
+    const [storage, setStorage] = React.useState(0);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [avatar, setAvatar] = React.useState({
         level: 1,
@@ -50,10 +55,12 @@ export const UserContextProvider = ({ children }: UserProviderProps) => {
         expTotal: 200
     });
 
+    const [forecast, setForecast] = React.useState<Day[]>();
     const [avatarImage, setAvatarImage] = React.useState(2);
     const [avatarNickname, setAvatarNickname] = React.useState('Jioyi');
 
     const [openStore, setOpenStore] = React.useState(false);
+    const [openCalendar, setOpenCalendar] = React.useState(false);
     const [openGameMap, setOpenGameMap] = React.useState(false);
     const [openCustomize, setOpenCustomize] = React.useState(false);
     const [openSettings, setOpenSettings] = React.useState(false);
@@ -75,11 +82,17 @@ export const UserContextProvider = ({ children }: UserProviderProps) => {
             case 'setMoney':
                 setMoney(data);
                 break;
+            case 'setStorage':
+                setStorage(data);
+                break;
             case 'setAvatarNickname':
                 setAvatarNickname(data);
                 break;
             case 'setSlots':
                 setSlots(data);
+                break;
+            case 'setForecast':
+                setForecast(data);
                 break;
         }
     };
@@ -97,6 +110,9 @@ export const UserContextProvider = ({ children }: UserProviderProps) => {
             },
             toggleStore: () => {
                 setOpenStore((prevMode) => !prevMode);
+            },
+            toggleCalendar: () => {
+                setOpenCalendar((prevMode) => !prevMode);
             },
             toggleGameMap: () => {
                 setOpenGameMap((prevMode) => !prevMode);
@@ -132,15 +148,35 @@ export const UserContextProvider = ({ children }: UserProviderProps) => {
             gameData,
             avatar,
             money,
+            storage,
+            forecast,
             avatarImage,
             avatarNickname,
             openCustomize,
             openStore,
+            openCalendar,
             openGameMap,
             openSettings,
             slots
         }),
-        [Engine, loading, progress, gameData, avatar, money, avatarImage, avatarNickname, openCustomize, openStore, openGameMap, openSettings, slots]
+        [
+            Engine,
+            loading,
+            progress,
+            gameData,
+            avatar,
+            money,
+            storage,
+            forecast,
+            avatarImage,
+            avatarNickname,
+            openCustomize,
+            openStore,
+            openCalendar,
+            openGameMap,
+            openSettings,
+            slots
+        ]
     );
 
     return <UserContext.Provider value={values}>{children}</UserContext.Provider>;

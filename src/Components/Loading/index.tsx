@@ -7,7 +7,7 @@ import Backdrop from '@mui/material/Backdrop';
 
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
-const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+const CustomBorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
     height: 6,
     borderRadius: 5,
     [`&.${linearProgressClasses.colorPrimary}`]: {
@@ -39,7 +39,7 @@ const Loading = ({ loading, progress }: LoadingProps) => {
                 <Box display="flex" justifyContent="center" alignItems="center">
                     <CustomTypography>Loading Demo / three-farm</CustomTypography>
                 </Box>
-                <BorderLinearProgress variant="determinate" value={progress} />
+                <CustomBorderLinearProgress variant="determinate" value={progress} />
                 <Box display="flex" justifyContent="center" alignItems="center">
                     <CustomTypography>{progress}%</CustomTypography>
                 </Box>

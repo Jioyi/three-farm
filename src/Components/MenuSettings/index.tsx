@@ -134,11 +134,12 @@ const CustomButton = styled(Button)({
 
 const MenuSettings = () => {
     const { toggleSettings, changeVolume } = useUserContext();
-    const [volume, setVolume] = React.useState<number | string | Array<number | string>>(100);
+    const [volume, setVolume] = React.useState<number | string | Array<number | string>>(JSON.parse(localStorage.getItem('volume')!) || 100);
 
     const handleSliderChange = (event: Event, newValue: number | number[]) => {
         setVolume(newValue);
         changeVolume(newValue as number);
+        localStorage.setItem('volume', JSON.stringify(newValue));
     };
 
     return (

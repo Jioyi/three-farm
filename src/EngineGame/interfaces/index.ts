@@ -18,10 +18,21 @@ export interface SlostData {
     };
     grid: THREE.GridHelper;
 }
+export interface Day {
+    year: number;
+    month: number;
+    weekday: number;
+    week: number;
+    day: number;
+    temperature: number;
+    humidity: number;
+    climate: number;
+}
 
 export interface TileData {
     empty: boolean;
     sold: boolean;
+    water: boolean;
     position: {
         x: number;
         y: number;
@@ -60,12 +71,14 @@ export interface AssetData {
     id: number;
     name: string;
     targetable: boolean;
+    surface: number;
     meshAnimation?: meshAnimation;
     label: string;
     labelAltitude: number;
     labelClassName: string;
     sizeX: number;
     sizeY: number;
+    type: AssetType;
     castShadow: boolean;
     autoRotate: boolean;
     image: string;
@@ -73,6 +86,8 @@ export interface AssetData {
     price: number;
     description: string;
 }
+
+export type AssetType = 'storage' | 'crop';
 
 export interface meshAnimation {
     modelName: string;

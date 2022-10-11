@@ -16,6 +16,10 @@ export class BasicSoundController {
             onload: () => {
                 this._loaded = true;
                 this._currentBackgroundMusic = this._sound.play('backgroundMusic1');
+                const volume = JSON.parse(localStorage.getItem('volume')!);
+                if (volume) {
+                    this._sound.volume((volume as number) / 100);
+                }
             }
         });
     }

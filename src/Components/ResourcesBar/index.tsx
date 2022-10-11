@@ -13,9 +13,9 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import StoreIcon from '@mui/icons-material/Store';
 import MapIcon from '@mui/icons-material/Map';
 import SaveIcon from '@mui/icons-material/Save';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 // Contexts
 import { useUserContext } from '../../Contexts';
-import Avatar from '../Avatar';
 
 const Nav = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -47,6 +47,19 @@ const CustomIconButton = styled(IconButton)(({ theme }) => ({
     }
 }));
 
+const CustomIconButton2 = styled(IconButton)(({ theme }) => ({
+    marginLeft: 5,
+    '& .MuiSvgIcon-root': {
+        color: '#333300'
+    },
+    '&:hover': {
+        background: '#33330055',
+        '& .MuiSvgIcon-root': {
+            color: '#ffcc00'
+        }
+    }
+}));
+
 const CustomTypography = styled(Typography)(({ theme }) => ({
     color: '#ffffff',
     fontWeight: 'bold',
@@ -56,10 +69,10 @@ const CustomTypography = styled(Typography)(({ theme }) => ({
 }));
 
 const ResourcesBar = () => {
-    const { toggleSettings, toggleStore, toggleGameMap, money } = useUserContext();
+    const { toggleSettings, toggleStore, toggleCalendar, toggleGameMap, money, storage } = useUserContext();
 
     const handleGitHub = () => {
-        window.open('https://github.com/Jioyi', '_blank');
+        window.open('https://github.com/Jioyi/three-farm-deploy', '_blank');
     };
 
     return (
@@ -93,50 +106,35 @@ const ResourcesBar = () => {
                 >
                     <Tooltip title="Coin">
                         <Box display="flex" justifyContent="center" alignItems="center">
-                            <CardMedia component="img" sx={{ width: 30, padding: 1 }} image="assets/icons/coin.png" alt="food" />
+                            <CardMedia component="img" sx={{ width: 30, padding: 1 }} image="assets/icons/coin.png" alt="coin" />
                         </Box>
                     </Tooltip>
                     <CustomTypography>{money}</CustomTypography>
+                    <Tooltip title="Storage">
+                        <Box display="flex" justifyContent="center" alignItems="center">
+                            <CardMedia component="img" sx={{ width: 30, padding: 1 }} image="assets/icons/storage.png" alt="storage" />
+                        </Box>
+                    </Tooltip>
+                    <CustomTypography>0/{storage}</CustomTypography>
                     <Tooltip title="Store">
-                        <StoreIcon
-                            onClick={toggleStore}
-                            sx={{
-                                fontSize: 26,
-                                marginLeft: 2,
-                                color: '#333300',
-                                '&:hover': {
-                                    cursor: 'pointer',
-                                    color: '#333300'
-                                }
-                            }}
-                        />
+                        <CustomIconButton2 onClick={toggleStore} color="inherit">
+                            <StoreIcon sx={{ fontSize: 26 }} />
+                        </CustomIconButton2>
+                    </Tooltip>
+                    <Tooltip title="Calendar">
+                        <CustomIconButton2 onClick={toggleCalendar} color="inherit">
+                            <CalendarMonthIcon sx={{ fontSize: 26 }} />
+                        </CustomIconButton2>
                     </Tooltip>
                     <Tooltip title="Map">
-                        <MapIcon
-                            onClick={toggleGameMap}
-                            sx={{
-                                fontSize: 26,
-                                marginLeft: 2,
-                                color: '#333300',
-                                '&:hover': {
-                                    cursor: 'pointer',
-                                    color: '#333300'
-                                }
-                            }}
-                        />
+                        <CustomIconButton2 onClick={toggleGameMap} color="inherit">
+                            <MapIcon sx={{ fontSize: 26 }} />
+                        </CustomIconButton2>
                     </Tooltip>
                     <Tooltip title="Save & Load">
-                        <SaveIcon
-                            sx={{
-                                fontSize: 26,
-                                marginLeft: 2,
-                                color: '#333300',
-                                '&:hover': {
-                                    cursor: 'pointer',
-                                    color: '#333300'
-                                }
-                            }}
-                        />
+                        <CustomIconButton2 color="inherit">
+                            <SaveIcon sx={{ fontSize: 26 }} />
+                        </CustomIconButton2>
                     </Tooltip>
                     <Box sx={{ flexGrow: 1 }}></Box>
                     <Tooltip title="GitHub">
@@ -151,7 +149,6 @@ const ResourcesBar = () => {
                     </Tooltip>
                 </Box>
             </Box>
-            <Avatar />
         </Nav>
     );
 };

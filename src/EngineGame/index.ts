@@ -9,7 +9,7 @@ import { GameObject } from './core/GameObject';
 import MouseEvents from './core/MouseEvents';
 import './style/base.css';
 import { BasicSoundController } from './core/BasicSoundController';
-import Grid from '@mui/material/Grid';
+import { CalendarController } from './core/CalendarController';
 
 export default class EngineGame {
     protected _cameraStarted: GamePosition = { x: 12, y: 12 };
@@ -34,6 +34,7 @@ export default class EngineGame {
     public soundController: BasicSoundController;
 
     private _money: number = 0;
+    private _storage: number = 0;
     private _eventGameHandler: (...args: any[]) => any;
     private _stats: Stats;
     private _clock: THREE.Clock;
@@ -47,6 +48,7 @@ export default class EngineGame {
     private _colorLinesGreen = new THREE.Color('#336600');
     private _colorRed = 0xff0000;
     private _colorLinesRed = new THREE.Color('#ff0000');
+    private _calendarController!: CalendarController;
 
     constructor(_canvas: HTMLCanvasElement, _eventGameHandler: (...args: any[]) => any) {
         this.canvas = _canvas;
@@ -124,6 +126,16 @@ export default class EngineGame {
         this._generateSlots();
         await this._generateMap();
         this._buildMouseEvents();
+        this._startGame();
+    };
+
+    private _startGame = () => {
+        this._calendarController = new CalendarController(this._eventGameHandler.bind(this));
+        this._calendarController.start();
+    };
+
+    private _pauseGame = () => {
+        //const myTimeout = setTimeout(this._addDay, 1000 * this._speedGame);
     };
 
     private _generateSlots = () => {
@@ -174,6 +186,7 @@ export default class EngineGame {
 
     private _RAF() {
         const deltaTime = this._clock.getDelta();
+
         this._update(deltaTime);
 
         this.renderer.render(this.scene, this.camera);
@@ -204,7 +217,7 @@ export default class EngineGame {
         pointLight.shadow.mapSize.height = 1024;
         this.scene.add(pointLight);
 
-        var ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);
     };
 
@@ -214,9 +227,13 @@ export default class EngineGame {
             tiles: []
         };
 
+        const farmSize = 24;
+
         for (let y = 0; y < this.mapSize; y++) {
             for (let x = 0; x < this.mapSize; x++) {
-                generatedMap.tiles.push({ empty: true, sold: false, position: { x: x, y: y } });
+                generatedMap.tiles.push({ empty: true, sold: false, water: false, position: { x: x, y: y } });
+
+                if (y < farmSize - 1 && x < farmSize - 1) continue;
                 //1% probability of getting true
                 if (Math.random() < 0.01) {
                     //80% probability of getting true
@@ -229,7 +246,6 @@ export default class EngineGame {
             }
         }
 
-        const farmSize = 24;
         for (let y = 0; y < farmSize; y++) {
             for (let x = 0; x < farmSize; x++) {
                 let indexTile = generatedMap.tiles.findIndex((tile: any) => tile.position.y === y && tile.position.x === x);
@@ -242,9 +258,36 @@ export default class EngineGame {
         }
 
         const baseAssets = [
+            { object_id: 10, rotation: 0, position: { x: 13, y: 9 } },
+            { object_id: 12, rotation: 0, position: { x: 1, y: 5 } },
+            { object_id: 3, rotation: 0, position: { x: 22, y: 1 } },
+            { object_id: 3, rotation: 0, position: { x: 22, y: 10 } },
             { object_id: 11, rotation: 0, position: { x: 3, y: 1 } },
-            { object_id: 10, rotation: 0, position: { x: 2, y: 8 } },
-            { object_id: 10, rotation: 0, position: { x: 2, y: 10 } }
+            { object_id: 4, rotation: 0, position: { x: 14, y: 1 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 2 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 3 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 4 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 5 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 6 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 7 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 8 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 9 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 10 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 11 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 12 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 13 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 14 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 15 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 16 } },
+            { object_id: 4, rotation: 0, position: { x: 14, y: 17 } },
+            { object_id: 4, rotation: 0, position: { x: 15, y: 9 } },
+            { object_id: 4, rotation: 0, position: { x: 16, y: 9 } },
+            { object_id: 4, rotation: 0, position: { x: 17, y: 9 } },
+            { object_id: 4, rotation: 0, position: { x: 18, y: 9 } },
+            { object_id: 4, rotation: 0, position: { x: 19, y: 9 } },
+            { object_id: 4, rotation: 0, position: { x: 20, y: 9 } },
+            { object_id: 4, rotation: 0, position: { x: 21, y: 9 } },
+            { object_id: 4, rotation: 0, position: { x: 22, y: 9 } }
         ];
 
         for (let i = 0; i < baseAssets.length; i++) {
@@ -278,11 +321,11 @@ export default class EngineGame {
 
     private _buildLoadingManager() {
         this._loadingManager = new THREE.LoadingManager();
-        this._loadingManager.onLoad = () => {
+        this._loadingManager.onLoad = async () => {
             this._eventGameHandler({ type: 'progress', data: 99 });
             setTimeout(() => {
-                this._eventGameHandler({ type: 'loading', data: false });
-            }, 2000);
+                this._eventGameHandler({ type: 'loading', data: false }); //this._LoadCacheImages();
+            }, 3000);
         };
         this._loadingManager.onProgress = (_url, _itemsLoaded, _itemsTotal) => {
             this._eventGameHandler({ type: 'progress', data: Math.round((_itemsLoaded / _itemsTotal) * 100) });
@@ -314,11 +357,25 @@ export default class EngineGame {
                 for (let y = object.position.y; y < object.position.y + this.gameData.assets[assetIndex].sizeY; y++) {
                     this.terrain.tiles[x][y].empty = false;
                 }
+            } 
+            
+            if (object.object_id === 10) {
+                for (let x = object.position.x + this.gameData.assets[assetIndex].surface; x >= object.position.x - this.gameData.assets[assetIndex].surface; x--) {
+                    for (let y = object.position.y - this.gameData.assets[assetIndex].surface; y <= object.position.y + this.gameData.assets[assetIndex].surface; y++) {
+                        if (this.terrain.tiles[x] && this.terrain.tiles[x][y]) {
+                            this.terrain.tiles[x][y].water = true;
+                        }
+                    }
+                }
+            }
+
+            if (this.gameData.assets[assetIndex].type === 'storage') {
+                this.storage += this.gameData.assets[assetIndex].sizeX * this.gameData.assets[assetIndex].sizeY;
             }
 
             const gameObject = new GameObject(this, object);
             this.gameObjects[gameObject.uuid] = gameObject;
-            if (gameObject.assetData.name.includes('fence')) gameObject.updateFence(true);
+            if (gameObject.assetData.name === 'fence' || gameObject.assetData.name === 'ditch') gameObject.updateDirection(true);
         }
     }
 
@@ -341,6 +398,15 @@ export default class EngineGame {
     set money(_number: number) {
         this._eventGameHandler({ type: 'setMoney', data: _number });
         this._money = _number;
+    }
+
+    get storage(): number {
+        return this._storage;
+    }
+
+    set storage(_number: number) {
+        this._eventGameHandler({ type: 'setStorage', data: _number });
+        this._storage = _number;
     }
 
     public buySlot(_x: number, _y: number) {

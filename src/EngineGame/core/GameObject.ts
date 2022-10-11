@@ -111,12 +111,22 @@ export class GameObject {
         );
         this._label.layers.set(0);
 
-        let box = instancedMesh.geometry.boundingBox.clone();
-        instancedMesh.updateMatrixWorld(true);
-        box.applyMatrix4(instancedMesh.matrix);
+        const geo: any = new THREE.BoxGeometry(this.assetData.sizeX / 2, 0.5, this.assetData.sizeY / 2);
+        geo.translate(this.assetData.sizeX > 1 ? this.assetData.sizeX / 2 - 0.5 : 0, 0, this.assetData.sizeY > 1 ? -this.assetData.sizeY / 2 + 0.5 : 0);
+        geo.computeBoundingBox();
+        let box = geo.boundingBox;
+
+        this.mesh.updateMatrixWorld(true);
+        box.applyMatrix4(this.mesh.matrix);
+
         this.area = box;
         this._engine.scene.add(instancedMesh);
     }
+
+    public updateBox = () => {
+        this.mesh.updateMatrixWorld(true);
+        this.area.applyMatrix4(this.mesh.matrix);
+    };
 
     get targetable(): boolean {
         return this._targetable;
@@ -191,75 +201,77 @@ export class GameObject {
         this.mesh.dispose();
     };
 
-    public updateFence = (_updateNext: boolean) => {
+    public updateDirection = (_updateNext: boolean) => {
         let top = Object.keys(this._engine.gameObjects).find(
             (key: string) =>
-                this._engine.gameObjects[key].assetData.name.includes('fence') &&
+                this._engine.gameObjects[key].assetData.name === this.assetData.name &&
                 this._engine.gameObjects[key].data.position.y === this.data.position.y &&
                 this._engine.gameObjects[key].data.position.x === this.data.position.x - 1
         );
         let bottom = Object.keys(this._engine.gameObjects).find(
             (key: string) =>
-                this._engine.gameObjects[key].assetData.name.includes('fence') &&
+                this._engine.gameObjects[key].assetData.name === this.assetData.name &&
                 this._engine.gameObjects[key].data.position.y === this.data.position.y &&
                 this._engine.gameObjects[key].data.position.x === this.data.position.x + 1
         );
         let left = Object.keys(this._engine.gameObjects).find(
             (key: string) =>
-                this._engine.gameObjects[key].assetData.name.includes('fence') &&
+                this._engine.gameObjects[key].assetData.name === this.assetData.name &&
                 this._engine.gameObjects[key].data.position.y === this.data.position.y - 1 &&
                 this._engine.gameObjects[key].data.position.x === this.data.position.x
         );
         let right = Object.keys(this._engine.gameObjects).find(
             (key: string) =>
-                this._engine.gameObjects[key].assetData.name.includes('fence') &&
+                this._engine.gameObjects[key].assetData.name === this.assetData.name &&
                 this._engine.gameObjects[key].data.position.y === this.data.position.y + 1 &&
                 this._engine.gameObjects[key].data.position.x === this.data.position.x
         );
         if (top && left && bottom && right) {
-            this._updateFenceModel('fence2', 0);
+            this._updateModel(`${this.assetData.name}2`, 0);
         } else if ((top && left && bottom) || (left && bottom && right) || (bottom && right && top) || (right && top && left)) {
             if (top && left && bottom) {
-                this._updateFenceModel('fence3', -Math.PI / 2);
+                this._updateModel(`${this.assetData.name}3`, -Math.PI / 2);
             } else if (left && bottom && right) {
-                this._updateFenceModel('fence3', 0);
+                this._updateModel(`${this.assetData.name}3`, 0);
             } else if (bottom && right && top) {
-                this._updateFenceModel('fence3', Math.PI / 2);
+                this._updateModel(`${this.assetData.name}3`, Math.PI / 2);
             } else {
-                this._updateFenceModel('fence3', -Math.PI);
+                this._updateModel(`${this.assetData.name}3`, -Math.PI);
             }
         } else if ((top && left) || (left && bottom) || (bottom && right) || (right && top)) {
             if (top && left) {
-                this._updateFenceModel('fence4', -Math.PI);
+                this._updateModel(`${this.assetData.name}4`, -Math.PI);
             } else if (left && bottom) {
-                this._updateFenceModel('fence4', -Math.PI / 2);
+                this._updateModel(`${this.assetData.name}4`, -Math.PI / 2);
             } else if (bottom && right) {
-                this._updateFenceModel('fence4', 0);
+                this._updateModel(`${this.assetData.name}4`, 0);
             } else {
-                this._updateFenceModel('fence4', Math.PI / 2);
+                this._updateModel(`${this.assetData.name}4`, Math.PI / 2);
             }
         } else if (top || bottom) {
-            this._updateFenceModel('fence1', Math.PI / 2);
+            this._updateModel(this.assetData.name, Math.PI / 2);
         } else {
-            this._updateFenceModel('fence1', 0);
+            this._updateModel(this.assetData.name, 0);
         }
 
         if (_updateNext) {
-            if (top) this._engine.gameObjects[top].updateFence(false);
-            if (bottom) this._engine.gameObjects[bottom].updateFence(false);
-            if (left) this._engine.gameObjects[left].updateFence(false);
-            if (right) this._engine.gameObjects[right].updateFence(false);
+            if (top) this._engine.gameObjects[top].updateDirection(false);
+            if (bottom) this._engine.gameObjects[bottom].updateDirection(false);
+            if (left) this._engine.gameObjects[left].updateDirection(false);
+            if (right) this._engine.gameObjects[right].updateDirection(false);
         }
     };
 
-    private _updateFenceModel = (_name: string, _rotation: number) => {
+    private _updateModel = (_name: string, _rotation: number) => {
+        if (this.data.object_id === 4 && this._engine.terrain.tiles[this.data.position.x][this.data.position.y].water) {
+            _name += '_water';
+        }
         if (this.mesh.name === _name) {
             this.mesh.rotation.set(0, _rotation, 0);
             return;
         }
         let indexModel = this._engine.uniqueModels.findIndex((x: any) => x.name === _name);
         if (indexModel <= -1) return;
-
         let instancedMesh = new THREE.InstancedMesh(this._engine.uniqueModels[indexModel].geometry, this._engine.uniqueModels[indexModel].material, 1);
         instancedMesh.rotation.set(0, _rotation, 0);
         instancedMesh.position.set(this.data.position.y, 0, this.data.position.x);
