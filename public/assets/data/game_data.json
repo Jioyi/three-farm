@@ -107,8 +107,8 @@
             "sizeY": 1,
             "castShadow": true,
             "autoRotate": false,
-            "image": "assets/images/fence.png",
-            "imageModel": "assets/images/fence.png",
+            "image": "assets/images/ditch.png",
+            "imageModel": "assets/images/ditch.png",
             "price": 80,
             "description": "When full of water, ditches irrigate fields."
         },

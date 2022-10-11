@@ -72,7 +72,7 @@ const ResourcesBar = () => {
     const { toggleSettings, toggleStore, toggleCalendar, toggleGameMap, money, storage } = useUserContext();
 
     const handleGitHub = () => {
-        window.open('https://github.com/Jioyi', '_blank');
+        window.open('https://github.com/Jioyi/three-farm-deploy', '_blank');
     };
 
     return (
