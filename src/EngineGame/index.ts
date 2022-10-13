@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { GameData, GamePosition, IGameObject, SlostData, TerrainData } from './interfaces';
 import { Terrain } from './core/Terrain';
@@ -10,6 +11,7 @@ import MouseEvents from './core/MouseEvents';
 import './style/base.css';
 import { BasicSoundController } from './core/BasicSoundController';
 import { CalendarController } from './core/CalendarController';
+import { AssetType } from './interfaces/index';
 
 export default class EngineGame {
     protected _cameraStarted: GamePosition = { x: 12, y: 12 };
@@ -24,6 +26,12 @@ export default class EngineGame {
     public camera: THREE.PerspectiveCamera;
     public ocamera: THREE.OrthographicCamera;
     public materialRed: THREE.MeshStandardMaterial;
+    public materialLine = new LineMaterial({
+        color: 0xffffff,
+        linewidth: 0.05,
+        dashed: false,
+        worldUnits: true
+    });
 
     public terrain!: Terrain;
     public gameData!: GameData;
@@ -58,10 +66,14 @@ export default class EngineGame {
         this.materialRed = new THREE.MeshStandardMaterial({ color: 0xff1313, side: THREE.DoubleSide, roughness: 1, transparent: true, opacity: 0.3 });
 
         //this._createMapJson();
+
+        let AA = true;
+        if (window.devicePixelRatio > 1) AA = false;
+
         // Build Render
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
-            antialias: true
+            antialias: AA
         });
         this.renderer.domElement.id = 'EngineGameCanvas';
         this.renderer.outputEncoding = THREE.sRGBEncoding;
@@ -85,8 +97,25 @@ export default class EngineGame {
         this._stats.domElement.style.cssText = 'display:flex;position:absolute;top:88px;right:10px;';
         document.body.append(this._stats.dom);
 
+        let FOV;
+        let FAR;
+
+        // Mobile camera
+        if (window.innerWidth <= 768) {
+            FOV = 50;
+            FAR = 1200;
+            // 769px - 1080px screen width camera
+        } else if (window.innerWidth >= 769 && window.innerWidth <= 1080) {
+            FOV = 50;
+            FAR = 1475;
+            // > 1080px screen width res camera
+        } else {
+            FOV = 40;
+            FAR = 1800;
+        }
+
         // Build Camera
-        this.camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 0.1, FAR);
         this.camera.layers.enableAll();
         this.camera.layers.toggle(1);
         this.camera.position.set(this._cameraStarted.x - 15, 25, this._cameraStarted.y + 15);
@@ -130,7 +159,7 @@ export default class EngineGame {
     };
 
     private _startGame = () => {
-        this._calendarController = new CalendarController(this._eventGameHandler.bind(this));
+        this._calendarController = new CalendarController(this, this._eventGameHandler.bind(this));
         this._calendarController.start();
     };
 
@@ -233,7 +262,7 @@ export default class EngineGame {
             for (let x = 0; x < this.mapSize; x++) {
                 generatedMap.tiles.push({ empty: true, sold: false, water: false, position: { x: x, y: y } });
 
-                if (y < farmSize - 1 && x < farmSize - 1) continue;
+                if (y < farmSize && x < farmSize) continue;
                 //1% probability of getting true
                 if (Math.random() < 0.01) {
                     //80% probability of getting true
@@ -287,7 +316,24 @@ export default class EngineGame {
             { object_id: 4, rotation: 0, position: { x: 19, y: 9 } },
             { object_id: 4, rotation: 0, position: { x: 20, y: 9 } },
             { object_id: 4, rotation: 0, position: { x: 21, y: 9 } },
-            { object_id: 4, rotation: 0, position: { x: 22, y: 9 } }
+            { object_id: 4, rotation: 0, position: { x: 22, y: 9 } },
+            { object_id: 2, rotation: 0, position: { x: 14, y: 18 } },
+            { object_id: 2, rotation: 0, position: { x: 14, y: 19 } },
+            { object_id: 2, rotation: 0, position: { x: 14, y: 20 } },
+            { object_id: 2, rotation: 0, position: { x: 14, y: 21 } },
+            { object_id: 2, rotation: 0, position: { x: 14, y: 22 } },
+            { object_id: 2, rotation: 0, position: { x: 15, y: 18 } },
+            { object_id: 2, rotation: 0, position: { x: 16, y: 18 } },
+            { object_id: 2, rotation: 0, position: { x: 17, y: 18 } },
+            { object_id: 2, rotation: 0, position: { x: 18, y: 18 } },
+            { object_id: 2, rotation: 0, position: { x: 19, y: 18 } },
+            { object_id: 2, rotation: 0, position: { x: 20, y: 18 } },
+            { object_id: 2, rotation: 0, position: { x: 21, y: 18 } },
+            { object_id: 2, rotation: 0, position: { x: 22, y: 18 } },
+            { object_id: 5, rotation: 0, position: { x: 18, y: 19 } },
+            { object_id: 5, rotation: 0, position: { x: 18, y: 21 } },
+            { object_id: 5, rotation: 0, position: { x: 22, y: 19 } },
+            { object_id: 5, rotation: 0, position: { x: 21, y: 22 } }
         ];
 
         for (let i = 0; i < baseAssets.length; i++) {
@@ -357,11 +403,19 @@ export default class EngineGame {
                 for (let y = object.position.y; y < object.position.y + this.gameData.assets[assetIndex].sizeY; y++) {
                     this.terrain.tiles[x][y].empty = false;
                 }
-            } 
-            
+            }
+
             if (object.object_id === 10) {
-                for (let x = object.position.x + this.gameData.assets[assetIndex].surface; x >= object.position.x - this.gameData.assets[assetIndex].surface; x--) {
-                    for (let y = object.position.y - this.gameData.assets[assetIndex].surface; y <= object.position.y + this.gameData.assets[assetIndex].surface; y++) {
+                for (
+                    let x = object.position.x + this.gameData.assets[assetIndex].surface;
+                    x >= object.position.x - this.gameData.assets[assetIndex].surface;
+                    x--
+                ) {
+                    for (
+                        let y = object.position.y - this.gameData.assets[assetIndex].surface;
+                        y <= object.position.y + this.gameData.assets[assetIndex].surface;
+                        y++
+                    ) {
                         if (this.terrain.tiles[x] && this.terrain.tiles[x][y]) {
                             this.terrain.tiles[x][y].water = true;
                         }
@@ -461,4 +515,11 @@ export default class EngineGame {
         this._slots[_x][_y].grid = newSlotGrid;
         this.scene.add(newSlotGrid);
     }
+
+    public updateCropsAndAnimals = () => {
+        for (let key of Object.keys(this.gameObjects)) {
+            if (this.gameObjects[key].assetData.type === AssetType.Animal || this.gameObjects[key].assetData.type === AssetType.Crop)
+                this.gameObjects[key].update();
+        }
+    };
 }

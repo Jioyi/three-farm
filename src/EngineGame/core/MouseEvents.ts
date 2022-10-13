@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { BasicInputController } from './BasicInputController';
 import { GameObject } from './GameObject';
 import EngineGame from '..';
+import { AssetType } from '../interfaces';
 
 export default class MouseEvents {
     private _engine: EngineGame;
@@ -164,7 +165,7 @@ export default class MouseEvents {
                         this._gameObjectTarget.updateDirection(true);
 
                     this._engine.money -= this._gameObjectTarget.assetData.price;
-                    if (this._gameObjectTarget.assetData.type === 'storage') {
+                    if (this._gameObjectTarget.assetData.type === AssetType.Storage) {
                         this._engine.storage += this._gameObjectTarget.assetData.sizeX * this._gameObjectTarget.assetData.sizeY;
                     }
 
@@ -294,13 +295,13 @@ export default class MouseEvents {
     };
 
     private _selectObjects = () => {
-        const list: any[] = [];
+        //const list: any[] = [];
 
         for (let key of Object.keys(this._engine.gameObjects)) {
             if (!this._engine.gameObjects[key].targetable) continue;
-            if (this._frustum.intersectsBox(this._engine.gameObjects[key].area)) {
+            if (this._frustum.intersectsBox(this._engine.gameObjects[key].area.boundingBox)) {
                 this._engine.gameObjects[key].selected = true;
-                list.push(this._engine.gameObjects[key].data);
+                //list.push(this._engine.gameObjects[key].data);
             } else {
                 this._engine.gameObjects[key].selected = false;
             }

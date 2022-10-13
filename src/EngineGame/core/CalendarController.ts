@@ -1,6 +1,8 @@
+import EngineGame from '..';
 import { Day } from '../interfaces';
 
 export class CalendarController {
+    private _engine: EngineGame;
     private _paused: boolean = false;
 
     private _calendar: Date;
@@ -12,7 +14,8 @@ export class CalendarController {
 
     private _forecast: Day[] = [];
 
-    constructor(_eventGameHandler: (...args: any[]) => any) {
+    constructor(_engine: EngineGame, _eventGameHandler: (...args: any[]) => any) {
+        this._engine = _engine;
         this._eventGameHandler = _eventGameHandler;
         this._calendar = new Date();
         this._calculateForecast(true);
@@ -29,6 +32,7 @@ export class CalendarController {
         this._forecast.splice(0, 1);
         if (this._forecast.length < 10) this._calculateForecast(false);
         this._eventGameHandler({ type: 'setForecast', data: [...this._forecast] });
+        this._engine.updateCropsAndAnimals();
         this._time = setTimeout(this._addDay, 1000 * this._speedGame);
     };
 

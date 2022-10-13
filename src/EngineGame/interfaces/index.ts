@@ -87,7 +87,11 @@ export interface AssetData {
     description: string;
 }
 
-export type AssetType = 'storage' | 'crop';
+export enum AssetType {
+    Storage = 'storage',
+    Crop = 'crop',
+    Animal = 'animal'
+}
 
 export interface meshAnimation {
     modelName: string;

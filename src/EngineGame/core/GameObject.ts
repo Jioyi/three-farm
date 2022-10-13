@@ -3,8 +3,7 @@ import * as THREE from 'three';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
-import { AssetData, GameObjectData } from '../interfaces';
+import { AssetData, AssetType, GameObjectData } from '../interfaces';
 import EngineGame from '..';
 
 export class GameObject {
@@ -13,8 +12,8 @@ export class GameObject {
     private _targetable: boolean = false;
     private _red: boolean = false;
 
-    private _label: CSS2DObject;
-    private _circle: Line2;
+    private _label!: CSS2DObject;
+    private _circle!: Line2;
 
     public data: GameObjectData;
     public assetData: AssetData;
@@ -25,13 +24,18 @@ export class GameObject {
     public subMesh: any;
     public area: any;
 
-    private _div: HTMLDivElement;
+    private _div!: HTMLDivElement;
+    private _textLabel!: HTMLDivElement;
     private _health: number = 1000;
-    private _healthBar: HTMLDivElement;
-    private _bar: HTMLDivElement;
-    private _hit: HTMLDivElement;
+    private _healthBar!: HTMLDivElement;
+    private _bar!: HTMLDivElement;
+    private _hit!: HTMLDivElement;
 
     private _dummy = new THREE.Object3D();
+    //private _helper!: THREE.BoxHelper;
+
+    //extra data
+    private _days: number = 0;
 
     constructor(_engine: EngineGame, _gameObjectData: GameObjectData) {
         this._engine = _engine;
@@ -54,78 +58,89 @@ export class GameObject {
         instancedMesh.setMatrixAt(0, this._dummy.matrix);
         instancedMesh.name = this.assetData.name;
         instancedMesh.castShadow = this.assetData.castShadow;
-        this.uuid = this.data.uuid ? this.data.uuid : uuidv4();
+        this.data.uuid = this.uuid = this.data.uuid ? this.data.uuid : uuidv4();
+
         this.mesh = instancedMesh;
+        this.mesh.updateMatrixWorld(true);
 
         if (this.assetData.meshAnimation) {
             this._addMeshAnimation(this.assetData.meshAnimation.modelName, this.assetData.meshAnimation.actionName);
         }
 
-        const points = [];
-        const radius = this.assetData.sizeX > this.assetData.sizeY ? this.assetData.sizeX / 2 : this.assetData.sizeY / 2;
-        for (let i = 0; i <= 360; i = i + 15) {
-            points.push(Math.sin(i * (Math.PI / 180)) * radius, Math.cos(i * (Math.PI / 180)) * radius, 0);
+        if (this.assetData.targetable) {
+            const points = [];
+            const radius = this.assetData.sizeX > this.assetData.sizeY ? this.assetData.sizeX / 2 : this.assetData.sizeY / 2;
+            for (let i = 0; i <= 360; i = i + 15) {
+                points.push(Math.sin(i * (Math.PI / 180)) * radius, Math.cos(i * (Math.PI / 180)) * radius, 0);
+            }
+            const lineGeometry = new LineGeometry();
+            lineGeometry.setPositions(points);
+
+            let line = new Line2(lineGeometry, this._engine.materialLine);
+            line.computeLineDistances();
+            line.scale.set(1, 1, 1);
+            line.rotation.set(Math.PI / 2, 0, 0);
+            line.position.set(
+                this.assetData.sizeX > 1 ? this.assetData.sizeX / 2 - 0.5 : 0,
+                0.04,
+                this.assetData.sizeY > 1 ? -this.assetData.sizeY / 2 + 0.5 : 0
+            );
+            this._circle = line;
+
+            //Create label text
+            this._div = document.createElement('div');
+            this._div.className = 'objectDiv';
+
+            this._textLabel = document.createElement('div');
+            this._textLabel.className = 'textLabel';
+            this._textLabel.textContent = this.assetData.label;
+            this._div.appendChild(this._textLabel);
+
+            this._healthBar = document.createElement('div');
+            this._healthBar.className = 'health-bar';
+            this._healthBar.dataset.dataTotal = this._health.toString();
+            this._healthBar.dataset.dataValue = this._health.toString();
+
+            this._bar = document.createElement('div');
+            this._bar.className = this.assetData.labelClassName;
+            this._healthBar.appendChild(this._bar);
+            this._hit = document.createElement('div');
+            this._hit.className = 'hit';
+            this._bar.appendChild(this._hit);
+
+            this._div.appendChild(this._healthBar);
+            this._label = new CSS2DObject(this._div);
+            this._label.position.set(
+                this.assetData.sizeX > 1 ? this.assetData.sizeX / 2 - 0.5 : 0,
+                this.assetData.labelAltitude,
+                this.assetData.sizeY > 1 ? -this.assetData.sizeY / 2 + 0.5 : 0
+            );
+            this._label.layers.set(0);
+
+            this.area = new THREE.BoxGeometry(this.assetData.sizeX / 2, 0.5, this.assetData.sizeY / 2);
+            this.area.computeBoundingBox();
+
+            this.area.translate(
+                this.assetData.sizeX > 1 ? this.assetData.sizeX / 2 - 0.5 : 0,
+                0,
+                this.assetData.sizeY > 1 ? -this.assetData.sizeY / 2 + 0.5 : 0
+            );
+            /*const object = new THREE.Mesh(this.area, new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+            this._helper = new THREE.BoxHelper(object, 0xffff00);
+            this._engine.scene.add(this._helper);*/
+
+            this.updateBox();
         }
-        const lineGeometry = new LineGeometry();
-        lineGeometry.setPositions(points);
-        const matLine = new LineMaterial({
-            color: 0xffffff,
-            linewidth: 0.05,
-            dashed: false,
-            worldUnits: true
-        });
-        let line = new Line2(lineGeometry, matLine);
-        line.computeLineDistances();
-        line.scale.set(1, 1, 1);
-        line.rotation.set(Math.PI / 2, 0, 0);
-        line.position.set(this.assetData.sizeX > 1 ? this.assetData.sizeX / 2 - 0.5 : 0, 0.04, this.assetData.sizeY > 1 ? -this.assetData.sizeY / 2 + 0.5 : 0);
-        this._circle = line;
 
-        //Create label text
-        this._div = document.createElement('div');
-        this._div.className = 'objectDiv';
-
-        const textLabel = document.createElement('div');
-        textLabel.className = 'textLabel';
-        textLabel.textContent = this.assetData.label;
-        this._div.appendChild(textLabel);
-
-        this._healthBar = document.createElement('div');
-        this._healthBar.className = 'health-bar';
-        this._healthBar.dataset.dataTotal = this._health.toString();
-        this._healthBar.dataset.dataValue = this._health.toString();
-
-        this._bar = document.createElement('div');
-        this._bar.className = this.assetData.labelClassName;
-        this._healthBar.appendChild(this._bar);
-        this._hit = document.createElement('div');
-        this._hit.className = 'hit';
-        this._bar.appendChild(this._hit);
-
-        this._div.appendChild(this._healthBar);
-        this._label = new CSS2DObject(this._div);
-        this._label.position.set(
-            this.assetData.sizeX > 1 ? this.assetData.sizeX / 2 - 0.5 : 0,
-            this.assetData.labelAltitude,
-            this.assetData.sizeY > 1 ? -this.assetData.sizeY / 2 + 0.5 : 0
-        );
-        this._label.layers.set(0);
-
-        const geo: any = new THREE.BoxGeometry(this.assetData.sizeX / 2, 0.5, this.assetData.sizeY / 2);
-        geo.translate(this.assetData.sizeX > 1 ? this.assetData.sizeX / 2 - 0.5 : 0, 0, this.assetData.sizeY > 1 ? -this.assetData.sizeY / 2 + 0.5 : 0);
-        geo.computeBoundingBox();
-        let box = geo.boundingBox;
-
-        this.mesh.updateMatrixWorld(true);
-        box.applyMatrix4(this.mesh.matrix);
-
-        this.area = box;
         this._engine.scene.add(instancedMesh);
     }
 
     public updateBox = () => {
         this.mesh.updateMatrixWorld(true);
-        this.area.applyMatrix4(this.mesh.matrix);
+        if (this.assetData.targetable) {
+            this.area.translate(this.data.position.y, 0, this.data.position.x);
+            //this._helper.update();
+        }
     };
 
     get targetable(): boolean {
@@ -296,6 +311,92 @@ export class GameObject {
             if (indexAnimation >= 0) {
                 const action = mixer.clipAction(this._engine.animations[indexAnimation]);
                 action.play();
+            }
+        }
+    };
+
+
+    public update = () => {
+        if (this.assetData.type === AssetType.Animal) {
+            this._days += 1;
+            let age;
+            if (this._days > 365) {
+                age = `Years: ${Math.round(this._days / 365)}`;
+            } else if (this._days > 30 && this._days < 365) {
+                age = `Months: ${Math.round(this._days / 30)}`;
+            } else {
+                age = `Days: ${this._days}`;
+            }
+            this._textLabel.textContent = `${this.assetData.label} / ${age}`;
+
+            if (Math.random() < 0.5) {
+                if (Math.random() < 0.5) {
+                    // Move top
+                    if (
+                        this._engine.terrain.tiles[this.data.position.x - 1] &&
+                        this._engine.terrain.tiles[this.data.position.x - 1][this.data.position.y] &&
+                        this._engine.terrain.tiles[this.data.position.x - 1][this.data.position.y].empty &&
+                        this._engine.terrain.tiles[this.data.position.x - 1][this.data.position.y].sold
+                    ) {
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y].empty = true;
+                        this._engine.terrain.tiles[this.data.position.x - 1][this.data.position.y].empty = false;
+                        this.mesh.rotation.set(0, -Math.PI / 2, 0);
+                        this.mesh.position.z = this.data.position.x - 1;
+                        this.data.position.x = this.data.position.x - 1;
+                        this.area.translate(0, 0, -1);
+                        //this._helper.update();
+                    }
+                } else {
+                    // Move bottom
+                    if (
+                        this._engine.terrain.tiles[this.data.position.x + 1] &&
+                        this._engine.terrain.tiles[this.data.position.x + 1][this.data.position.y] &&
+                        this._engine.terrain.tiles[this.data.position.x + 1][this.data.position.y].empty &&
+                        this._engine.terrain.tiles[this.data.position.x + 1][this.data.position.y].sold
+                    ) {
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y].empty = true;
+                        this._engine.terrain.tiles[this.data.position.x + 1][this.data.position.y].empty = false;
+                        this.mesh.rotation.set(0, Math.PI / 2, 0);
+                        this.mesh.position.z = this.data.position.x + 1;
+                        this.data.position.x = this.data.position.x + 1;
+                        this.area.translate(0, 0, 1);
+                        //this._helper.update();
+                    }
+                }
+            } else {
+                if (Math.random() < 0.5) {
+                    // Move left
+                    if (
+                        this._engine.terrain.tiles[this.data.position.x] &&
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y - 1] &&
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y - 1].empty &&
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y - 1].sold
+                    ) {
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y].empty = true;
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y - 1].empty = false;
+                        this.mesh.rotation.set(0, 0, 0);
+                        this.mesh.position.x = this.data.position.y - 1;
+                        this.data.position.y = this.data.position.y - 1;
+                        this.area.translate(-1, 0, 0);
+                        //this._helper.update();
+                    }
+                } else {
+                    // Move right
+                    if (
+                        this._engine.terrain.tiles[this.data.position.x] &&
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y + 1] &&
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y + 1].empty &&
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y + 1].sold
+                    ) {
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y].empty = true;
+                        this._engine.terrain.tiles[this.data.position.x][this.data.position.y + 1].empty = false;
+                        this.mesh.rotation.set(0, Math.PI, 0);
+                        this.mesh.position.x = this.data.position.y + 1;
+                        this.data.position.y = this.data.position.y + 1;
+                        this.area.translate(1, 0, 0);
+                        //this._helper.update();
+                    }
+                }
             }
         }
     };
